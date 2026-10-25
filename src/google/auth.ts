@@ -12,6 +12,8 @@ export const SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly",
   "https://www.googleapis.com/auth/gmail.compose",
   "https://www.googleapis.com/auth/spreadsheets.readonly",
+  "https://www.googleapis.com/auth/drive.readonly",
+  "https://www.googleapis.com/auth/calendar.readonly",
 ];
 
 interface ClientSecrets {
@@ -22,14 +24,14 @@ interface ClientSecrets {
 export function readClientSecrets(path: string | undefined): ClientSecrets {
   if (!path) {
     throw new Error(
-      "DEAL_HARNESS_OAUTH_CLIENT is not set. Point it at the client JSON you downloaded for your Desktop OAuth client.",
+      "No Google OAuth client set. Add `- oauth client: /path/to/client.json` to config.local.md in your data folder (or set DEAL_HARNESS_OAUTH_CLIENT).",
     );
   }
   let json: { installed?: ClientSecrets; web?: ClientSecrets };
   try {
     json = JSON.parse(readFileSync(path, "utf8")) as typeof json;
   } catch {
-    throw new Error(`Can't read the OAuth client file at ${path} (DEAL_HARNESS_OAUTH_CLIENT).`);
+    throw new Error(`Can't read the OAuth client file at ${path}.`);
   }
   const secrets = json.installed ?? json.web;
   if (!secrets?.client_id || !secrets.client_secret) {

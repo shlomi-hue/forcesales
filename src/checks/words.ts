@@ -2,7 +2,7 @@
 
 import type { CheckResult } from "./pricing.js";
 
-// Risky promises a salesperson shouldn't put in writing. Replaced by the "never say" list in company/voice.md.
+// Risky promises a salesperson shouldn't put in writing. The "never say" list in company/voice.md adds to these.
 export const DEFAULT_BANNED = [
   "guarantee",
   "guaranteed",

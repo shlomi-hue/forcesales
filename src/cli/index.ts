@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 import { createRequire } from "node:module";
-import { readConfig } from "../config.js";
+import { dataDir, ensureDataFolder } from "../data/folder.js";
+import { loadConfig } from "../data/settings.js";
 import { login } from "../google/auth.js";
 import { keychainStore } from "../google/token-store.js";
+import { reindex } from "../index/search.js";
 import { serve } from "./serve.js";
 
 const { version } = createRequire(import.meta.url)("../../package.json") as { version: string };
@@ -12,12 +14,15 @@ const HELP = `deal-harness ${version}
   deal-harness serve    start the MCP server on stdio (used by Claude Code)
   deal-harness login    sign in to Google; the token goes in your OS keychain
   deal-harness logout   remove the token from the keychain
+  deal-harness reindex  rebuild index.sqlite from the markdown in your data folder
 
-Settings (environment variables):
+Settings live in config.md in your data folder. Environment variables override them:
+  DEAL_HARNESS_DATA               data folder (default ~/deal-harness-data)
   DEAL_HARNESS_OAUTH_CLIENT       path to your Desktop OAuth client JSON
   DEAL_HARNESS_RATE_CARD_SHEET    rate card Sheet id or link
   DEAL_HARNESS_RATE_CARD_RANGE    optional A1 range; default reads every tab
   DEAL_HARNESS_RATE_CARD_COLUMNS  optional JSON naming columns, e.g. {"name":"Product","floor":"Walk-away"}
+  DEAL_HARNESS_MAX_DISCOUNT       highest discount allowed, in percent
 `;
 
 async function main(): Promise<void> {
@@ -27,10 +32,17 @@ async function main(): Promise<void> {
     case "serve":
       return serve(version);
     case "login":
-      return login(readConfig().oauthClientPath, keychainStore(), log);
+      return login(loadConfig(dataDir()).oauthClientPath, keychainStore(), log);
     case "logout":
       log(keychainStore().clear() ? "Signed out." : "No token was stored.");
       return;
+    case "reindex": {
+      const dir = dataDir();
+      await ensureDataFolder(dir);
+      const { files, chunks } = reindex(dir);
+      log(`Rebuilt ${dir}/index.sqlite: ${files} files, ${chunks} sections.`);
+      return;
+    }
     case undefined:
     case "help":
     case "--help":

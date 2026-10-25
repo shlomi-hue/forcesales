@@ -15,6 +15,12 @@ const MAX_BODY_CHARS = 20_000;
 
 // ---------- reading ----------
 
+// Subjects and bodies only, no block: what quote.check compares signal quotes against.
+export async function threadText(gmail: Gmail, threadId: string): Promise<string> {
+  const { data } = await gmail.users.threads.get({ userId: "me", id: threadId, format: "full" });
+  return (data.messages ?? []).map((m) => `${header(m, "Subject")}\n${bodyText(m.payload)}`).join("\n\n");
+}
+
 export async function readThread(gmail: Gmail, threadId: string): Promise<string> {
   const { data } = await gmail.users.threads.get({ userId: "me", id: threadId, format: "full" });
   const messages = (data.messages ?? []).map(formatMessage).join("\n\n---\n\n");

@@ -2,11 +2,7 @@
   "mcpServers": {
     "deal-harness": {
       "command": "node",
-      "args": ["/ABSOLUTE/PATH/TO/forcesales/dist/cli/index.js", "serve"],
-      "env": {
-        "DEAL_HARNESS_OAUTH_CLIENT": "/ABSOLUTE/PATH/TO/client_secret.json",
-        "DEAL_HARNESS_RATE_CARD_SHEET": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit"
-      }
+      "args": ["/ABSOLUTE/PATH/TO/forcesales/dist/cli/index.js", "serve"]
     }
   }
 }

@@ -11,11 +11,8 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { gmail_v1 } from "@googleapis/gmail";
 import { afterAll, describe, expect, it } from "vitest";
-import { parseRateCard } from "../../src/checks/rate-card.js";
 import { buildServer } from "../../src/server/server.js";
-import type { Sheets } from "../../src/tools/sheets.js";
-import { simple } from "../../test/checks/fixtures.js";
-import { fakeGmail, rules } from "../../test/tools/fake-google.js";
+import { fakeGmail, testDeps } from "../../test/tools/fake-google.js";
 
 interface Case {
   name: string;
@@ -62,14 +59,9 @@ function toThread(c: Case): gmail_v1.Schema$Thread {
   };
 }
 
-const fakeSheets = {} as Sheets;
-
 async function connect(c: Case) {
   const { gmail, drafts } = fakeGmail({ thread: toThread(c), sentTo: ["acme.example"] });
-  const server = buildServer(
-    { gmail: () => gmail, sheets: () => fakeSheets, loadRateCard: async () => parseRateCard(simple), rules: async () => rules, internalIds: ["RATECARD-SHEET-ID-123"] },
-    "eval",
-  );
+  const server = buildServer(testDeps({ gmail }), "eval");
   const [a, b] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: "eval", version: "1" });
   await Promise.all([server.connect(a), client.connect(b)]);

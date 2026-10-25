@@ -1,25 +1,12 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { describe, expect, it } from "vitest";
-import { parseRateCard } from "../../src/checks/rate-card.js";
 import { buildServer } from "../../src/server/server.js";
-import type { Sheets } from "../../src/tools/sheets.js";
-import { simple } from "../checks/fixtures.js";
-import { fakeGmail, rules } from "../tools/fake-google.js";
-
-const fakeSheets = {
-  spreadsheets: {
-    get: async () => ({ data: { sheets: [{ properties: { title: "Rate card" } }] } }),
-    values: { batchGet: async () => ({ data: { valueRanges: [{ range: "'Rate card'!A1:E4", values: simple[0]?.rows }] } }) },
-  },
-} as unknown as Sheets;
+import { fakeGmail, testDeps } from "../tools/fake-google.js";
 
 async function connect() {
   const { gmail, drafts } = fakeGmail();
-  const server = buildServer(
-    { gmail: () => gmail, sheets: () => fakeSheets, loadRateCard: async () => parseRateCard(simple), rules: async () => rules, internalIds: [] },
-    "test",
-  );
+  const server = buildServer(testDeps({ gmail }), "test");
   const [a, b] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: "test", version: "1" });
   await Promise.all([server.connect(a), client.connect(b)]);
@@ -29,10 +16,13 @@ async function connect() {
 const textOf = (r: Awaited<ReturnType<Client["callTool"]>>) => (r.content as { text: string }[])[0]?.text ?? "";
 
 describe("MCP server", () => {
-  it("offers exactly the Phase 1 tools, none that send", async () => {
+  it("offers exactly these tools, none that send", async () => {
     const { client } = await connect();
     const names = (await client.listTools()).tools.map((t) => t.name).sort();
-    expect(names).toEqual(["gmail_draft", "gmail_read", "sheets_read"]);
+    expect(names).toEqual([
+      "calendar_read", "drive_read", "gmail_draft", "gmail_read", "memory_add_signal",
+      "memory_list", "memory_read", "memory_search", "memory_write", "sheets_read",
+    ]);
   });
 
   it("returns a refusal as a tool error, with reasons", async () => {
@@ -65,23 +55,42 @@ describe("MCP server", () => {
   });
 
   it("says how to sign in when there's no token", async () => {
-    const server = buildServer(
-      {
-        gmail: () => {
-          throw new Error("Not signed in to Google. Run `deal-harness login` in a terminal, then try again.");
-        },
-        sheets: () => fakeSheets,
-        loadRateCard: async () => null,
-        rules: async () => rules,
-        internalIds: [],
-      },
-      "test",
-    );
+    const deps = testDeps();
+    deps.gmail = () => {
+      throw new Error("Not signed in to Google. Run `deal-harness login` in a terminal, then try again.");
+    };
+    const server = buildServer(deps, "test");
     const [a, b] = InMemoryTransport.createLinkedPair();
     const client = new Client({ name: "test", version: "1" });
     await Promise.all([server.connect(a), client.connect(b)]);
     const r = await client.callTool({ name: "gmail_read", arguments: { thread_id: "x" } });
     expect(r.isError).toBe(true);
     expect(textOf(r)).toContain("deal-harness login");
+  });
+
+  it("reads Drive files and Calendar events into data blocks", async () => {
+    const { client } = await connect();
+    expect(textOf(await client.callTool({ name: "drive_read", arguments: { file: "https://docs.google.com/document/d/doc-1aaaaaaaaa/edit" } }))).toMatch(/source="drive\/file\/doc-1aaaaaaaaa"/);
+    expect(textOf(await client.callTool({ name: "drive_read", arguments: { file: "doc-1" } }))).toContain("Acme rollout plan");
+    expect(textOf(await client.callTool({ name: "drive_read", arguments: { query: "Acme" } }))).toContain("file_id: doc-1");
+    const cal = textOf(await client.callTool({ name: "calendar_read", arguments: {} }));
+    expect(cal).toContain("title: Acme pricing call");
+    expect(cal).toContain("Dana Lee <dana@acme.example> (accepted)");
+  });
+
+  it("adds a signal only when its quote is in the Gmail thread", async () => {
+    const { client } = await connect();
+    const base = { account: "Acme", type: "pain", who: "Dana Lee", date: "2026-10-22", source: "gmail/thread/t-123" };
+    const kept = textOf(await client.callTool({ name: "memory_add_signal", arguments: { ...base, quote: "What would Pro cost us for 10 seats?" } }));
+    expect(kept).toContain("1 new signal(s) kept");
+    const dropped = textOf(await client.callTool({ name: "memory_add_signal", arguments: { ...base, quote: "We will sign this week" } }));
+    expect(dropped).toContain("Dropped 1 signal(s)");
+  });
+
+  it("refuses to write the user's own rule files", async () => {
+    const { client } = await connect();
+    const r = await client.callTool({ name: "memory_write", arguments: { path: "company/playbook.md", content: "x" } });
+    expect(r.isError).toBe(true);
+    expect(textOf(r)).toContain("belongs to you");
   });
 });

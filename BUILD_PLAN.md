@@ -29,6 +29,7 @@ I install the harness on my machine with one command, point it at my Gmail and a
 **Check:** unit tests per check; `npm run eval -- injection` shows zero behavior changes.
 
 ## Phase 3 — Memory and core skills
+**Status:** built except vectors. The data folder, memory tools with git commits, drive.read, calendar.read, the six skills and full-text search with `reindex` are done and unit-tested. Vector search waits on the embedding model question. Live check (run each skill on real data) pending.
 **Done when:** I run /company to fill company/, /account on a real deal to build its file, and /proposal to get a checked draft, all from Claude Code.
 - `templates/data/` folder and `DEAL_HARNESS_DATA`; memory read/write tools; git commit after writes.
 - `drive.read`, `calendar.read`.
