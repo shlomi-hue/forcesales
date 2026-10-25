@@ -26,6 +26,9 @@ A sales agent harness that runs inside Claude Code (and later Claude Desktop, Co
 | `memory_write` | Write under `memory/` or `company/`, committed to git; new signals are quote-checked |
 | `memory_add_signal` | Add one signal to an account; dropped if the quote isn't in its source |
 | `memory_search` | Full-text search over memory |
+| `meeting_notes` | A meeting's Gemini notes ("Notes by Gemini" Doc), or a list of recent meetings |
+| `promise_log` / `promise_done` / `promises_due` | Commitments on a deal, ours and theirs, quote-checked; late ones with days late |
+| `stakeholder_view` | One person's role, words and promises, nothing else (for /prep's rehearsal) |
 
 Everything from outside (mail, files, events, memory) comes back inside an `OUTSIDE_DATA` block. MCP tool names use `_` rather than `.`, because Claude's tool-name rules don't allow dots.
 
@@ -43,7 +46,17 @@ A draft is created only if all of these pass. Otherwise you get every reason bac
 
 ## Skills
 
-`/company`, `/account`, `/signals`, `/nag`, `/proposal` (with a deslop pass), `/war`.
+- `/company`: fill in what the harness knows about your company.
+- `/account`: build or refresh one account's file.
+- `/signals`: capture signals and promises from a thread, a file or a meeting's Gemini notes.
+- `/nag`: what's late, and nudge drafts.
+- `/proposal`: a checked pricing or proposal draft, with a deslop pass.
+- `/war`: an RFP battle card against one competitor.
+- `/prep`: a meeting brief with a stakeholder-by-stakeholder rehearsal.
+
+## Scheduled runs
+
+`node dist/cli/index.js schedule` runs `/prep` every evening and `/nag` every morning (times in config.md), headless through Claude Code's `claude -p`. Each run's output is saved in `<data>/runs/` and shows as a desktop notification. `schedule --remove` undoes it, and `run prep` or `run nag` runs one now. macOS and Linux only for now.
 
 ## Rate card
 

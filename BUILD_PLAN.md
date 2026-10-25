@@ -29,7 +29,7 @@ I install the harness on my machine with one command, point it at my Gmail and a
 **Check:** unit tests per check; `npm run eval -- injection` shows zero behavior changes.
 
 ## Phase 3 — Memory and core skills
-**Status:** built except vectors. The data folder, memory tools with git commits, drive.read, calendar.read, the six skills and full-text search with `reindex` are done and unit-tested. Vector search waits on the embedding model question. Live check (run each skill on real data) pending.
+**Status:** built and unit-tested: data folder, memory tools with git commits, drive.read, calendar.read, the skills, and full-text search with `reindex`. Vector search is dropped for now (decided 2026-10-25), so `index.sqlite` is full-text only. /war builds a battle card against one competitor for an RFP. Live check (run each skill on real data) pending.
 **Done when:** I run /company to fill company/, /account on a real deal to build its file, and /proposal to get a checked draft, all from Claude Code.
 - `templates/data/` folder and `DEAL_HARNESS_DATA`; memory read/write tools; git commit after writes.
 - `drive.read`, `calendar.read`.
@@ -38,12 +38,13 @@ I install the harness on my machine with one command, point it at my Gmail and a
 **Check:** run each skill once on real data; every signal has a verified quote and source link; `reindex` rebuilds from markdown.
 
 ## Phase 4 — Calls and promises
-**Done when:** the evening before a meeting I get a brief with per-stakeholder objections, and after the call its transcript turns into signals and tracked promises.
-- `transcripts.read` from a Drive folder.
-- /prep with committee rehearsal (each stakeholder sees only their own quotes and role).
-- `promise.log`; /signals extracts commitments; /nag flags slipped ones.
-- Runner: a cron or launchd job for the evening /prep and morning /nag.
-**Check:** run /prep on one real upcoming meeting; run /signals on one real transcript; a promise past its date shows in /nag.
+**Done when:** the evening before a meeting I get a brief with per-stakeholder objections, and after the call its Gemini notes turn into signals and tracked promises.
+- `meeting_notes`: read the Gemini notes Doc from Google Meet ("Notes by Gemini", attached to the Calendar event or found in Drive). No transcripts: decided 2026-10-25.
+- /prep with committee rehearsal (each stakeholder sees only their own quotes and role, via `stakeholder_view`).
+- `promise_log`, `promise_done` and `promises_due`; /signals extracts commitments; /nag flags slipped ones.
+- Runner: `deal-harness schedule` installs a launchd (macOS) or cron (Linux) job for the evening /prep and morning /nag, run headless through `claude -p`.
+**Check:** run /prep on one real upcoming meeting; run /signals on one real meeting's Gemini notes; a promise past its date shows in /nag.
+**Status:** built and unit-tested; the injection eval now covers poisoned meeting notes too. Live check pending, including one real `deal-harness run prep`.
 
 ## Phase 5 — History scan and ICP map
 **Done when:** /history has scanned my past 2 to 3 years of mail and shows rebuilt deals, inferred outcomes for me to confirm, an ICP map and a calibration baseline.
@@ -80,8 +81,8 @@ I install the harness on my machine with one command, point it at my Gmail and a
 
 ## Open questions
 - Rate card Sheet layout: ask me for the Sheet before Phase 1's `pricing.check`.
-- Embedding model for `sqlite-vec` (local or an API): ask at Phase 3.
-- Which recorder exports my transcripts, and in what format: ask at Phase 4.
+- Embedding model: dropped for now; full-text search only (2026-10-25).
+- Transcripts: not used; meetings come from Gemini notes (2026-10-25).
 - Email scan scope (start date, labels, domains to exclude): ask at Phase 5.
 - Exact config paths for Codex and Gemini CLI: check their current docs at Phase 9.
 - Keychain library: propose one and ask before adding it in Phase 1.

@@ -42,6 +42,8 @@ function formatEvent(e: Event): string {
   if (attendees.length) lines.push(`attendees: ${attendees.join(", ")}`);
   if (e.location) lines.push(`location: ${e.location}`);
   if (e.hangoutLink) lines.push(`meet: ${e.hangoutLink}`);
+  const files = (e.attachments ?? []).map((a) => `${a.title ?? "file"} (file_id: ${a.fileId ?? "?"})`);
+  if (files.length) lines.push(`attachments: ${files.join(", ")}`);
   const desc = (e.description ?? "").replace(/<[^>]+>/g, " ").trim();
   if (desc) lines.push("", desc.length > MAX_DESCRIPTION ? `${desc.slice(0, MAX_DESCRIPTION)} [...]` : desc);
   return lines.join("\n");

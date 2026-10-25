@@ -3,11 +3,14 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const SKILLS = readdirSync("skills").filter((d) => !d.startsWith("."));
-const TOOLS = ["gmail_read", "gmail_draft", "sheets_read", "drive_read", "calendar_read", "memory_list", "memory_read", "memory_write", "memory_add_signal", "memory_search"];
+const TOOLS = [
+  "gmail_read", "gmail_draft", "sheets_read", "drive_read", "calendar_read", "meeting_notes", "memory_list", "memory_read",
+  "memory_write", "memory_add_signal", "memory_search", "promise_log", "promise_done", "promises_due", "stakeholder_view",
+];
 
 describe("skills", () => {
-  it("ships the Phase 3 skills", () => {
-    expect(SKILLS.sort()).toEqual(["account", "company", "nag", "proposal", "signals", "war"]);
+  it("ships the skills so far", () => {
+    expect(SKILLS.sort()).toEqual(["account", "company", "nag", "prep", "proposal", "signals", "war"]);
   });
 
   for (const name of SKILLS) {

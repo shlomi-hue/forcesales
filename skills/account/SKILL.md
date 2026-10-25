@@ -12,6 +12,7 @@ description: Build or refresh the file for one prospect or customer account, wit
 3. Gather sources:
    - `gmail_read` with a query like `from:acme.com OR to:acme.com newer_than:1y`, then read the important threads in full.
    - `calendar_read` with `query` set to the company name, covering the past 90 days and the next 30.
+   - `meeting_notes` with `query` set to the company name over the past 90 days, then read each meeting's Gemini notes.
    - `drive_read` with `query` set to the company name.
 4. Write the file with `memory_write` at `memory/accounts/<company>.md` in this shape:
 
@@ -36,7 +37,7 @@ description: Build or refresh the file for one prospect or customer account, wit
    ```
 
    Keep existing signals: read first, then write the whole file back with them.
-5. Add signals one by one with `memory_add_signal`. Use the buyer's exact words as the quote, the thread as the source (`gmail/thread/<thread_id>`), and the date they said it. Types: budget, timeline, pain, need, authority, criteria, process, risk, objection, competitor, champion, next-step. Add `expires` when a signal goes stale, like a timeline date.
+5. Add signals one by one with `memory_add_signal`. Use the buyer's exact words as the quote, the source they came from (`gmail/thread/<thread_id>`, or `drive/file/<id>` for meeting notes), and the date they said it. Log commitments with `promise_log`. Types: budget, timeline, pain, need, authority, criteria, process, risk, objection, competitor, champion, next-step. Add `expires` when a signal goes stale, like a timeline date.
 6. Tell the user which signals were dropped and why. A dropped signal means the quote wasn't exact.
 7. End with the three biggest unknowns in the deal.
 

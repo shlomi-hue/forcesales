@@ -6,6 +6,7 @@ import { dirname, join } from "node:path";
 import { quoteCheck } from "../checks/quote.js";
 import { commit, ensureDataFolder, safePath } from "../data/folder.js";
 import { indexFile, openIndex, search, type Hit } from "../index/search.js";
+import { newPromises } from "../memory/promises.js";
 import { formatSignal, newSignals, type Signal } from "../memory/signals.js";
 import { dataBlock } from "../server/data-block.js";
 
@@ -19,6 +20,7 @@ export interface WriteResult {
   path: string;
   created: boolean;
   keptSignals: number;
+  keptPromises: number;
   dropped: string[];
   notes: string[];
 }
@@ -62,7 +64,7 @@ export async function memoryWrite(
   const { abs, rel } = safePath(deps.dir, input.path, { write: true });
   const created = !existsSync(abs);
   const prev = created ? "" : readFileSync(abs, "utf8");
-  let next = input.mode === "append" ? `${prev.replace(/\n*$/, "\n")}${input.content.replace(/^\n+/, "")}` : input.content;
+  let next = input.mode === "append" && prev ? `${prev.replace(/\n*$/, "\n")}${input.content.replace(/^\n+/, "")}` : input.content;
   if (!next.endsWith("\n")) next += "\n";
 
   guardContent(next);
@@ -79,6 +81,18 @@ export async function memoryWrite(
       next = next.replace(`${s.text}\n`, "").replace(s.text, "");
     }
   }
+  // Promises carry a quote too, and get the same check.
+  const promises = newPromises(prev, next);
+  if (promises.malformed.length > 0) {
+    throw new Error(`These lines look like promises but don't match the format, so nothing was written:\n${promises.malformed.join("\n")}\nUse promise_log to add promises.`);
+  }
+  for (const p of promises.added) {
+    const why = await quoteProblem(deps, p.quote, p.source);
+    if (why) {
+      dropped.push(`promise "${p.what}": ${why}`);
+      next = next.replace(`${p.text}\n`, "").replace(p.text, "");
+    }
+  }
 
   mkdirSync(dirname(abs), { recursive: true });
   writeFileSync(abs, next);
@@ -90,7 +104,8 @@ export async function memoryWrite(
   }
   const note = await commit(deps.dir, [rel], message ?? `${created ? "Add" : "Update"} ${rel}`);
   if (note) notes.push(note);
-  return { path: rel, created, keptSignals: added.length - dropped.length, dropped, notes };
+  const keptSignals = added.length - dropped.filter((d) => d.startsWith("[")).length;
+  return { path: rel, created, keptSignals, keptPromises: promises.added.length - dropped.filter((d) => d.startsWith("promise ")).length, dropped, notes };
 }
 
 export interface NewSignal {
@@ -144,11 +159,16 @@ async function prepare(deps: MemoryDeps): Promise<string[]> {
 }
 
 async function signalProblem(deps: MemoryDeps, s: Signal): Promise<string | null> {
-  if (s.quote.length > MAX_QUOTE) return `the quote is over ${MAX_QUOTE} characters; keep the words that matter.`;
   if (s.date > today()) return "the date is in the future.";
-  const text = await deps.sourceText(s.source).catch(() => null);
-  if (text === null) return `couldn't read the source ${s.source}.`;
-  return quoteCheck(s.quote, text) ? null : `the quote isn't in ${s.source} word for word.`;
+  return quoteProblem(deps, s.quote, s.source);
+}
+
+// Why a quote can't be stored, or null when it's found word for word in its source.
+export async function quoteProblem(deps: MemoryDeps, quote: string, source: string): Promise<string | null> {
+  if (quote.length > MAX_QUOTE) return `the quote is over ${MAX_QUOTE} characters; keep the words that matter.`;
+  const text = await deps.sourceText(source).catch(() => null);
+  if (text === null) return `couldn't read the source ${source}.`;
+  return quoteCheck(quote, text) ? null : `the quote isn't in ${source} word for word.`;
 }
 
 // Memory keeps quotes and facts, never whole emails or tool output.

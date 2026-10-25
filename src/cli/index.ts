@@ -5,6 +5,8 @@ import { loadConfig } from "../data/settings.js";
 import { login } from "../google/auth.js";
 import { keychainStore } from "../google/token-store.js";
 import { reindex } from "../index/search.js";
+import { runJob, type Job } from "./run.js";
+import { schedule } from "./schedule.js";
 import { serve } from "./serve.js";
 
 const { version } = createRequire(import.meta.url)("../../package.json") as { version: string };
@@ -15,6 +17,8 @@ const HELP = `deal-harness ${version}
   deal-harness login    sign in to Google; the token goes in your OS keychain
   deal-harness logout   remove the token from the keychain
   deal-harness reindex  rebuild index.sqlite from the markdown in your data folder
+  deal-harness run prep|nag        run one job now, headless (needs Claude Code's claude command)
+  deal-harness schedule [--remove] run prep each evening and nag each morning (macOS, Linux)
 
 Settings live in config.md in your data folder. Environment variables override them:
   DEAL_HARNESS_DATA               data folder (default ~/deal-harness-data)
@@ -43,6 +47,13 @@ async function main(): Promise<void> {
       log(`Rebuilt ${dir}/index.sqlite: ${files} files, ${chunks} sections.`);
       return;
     }
+    case "run": {
+      const job = process.argv[3];
+      if (job !== "prep" && job !== "nag") throw new Error("Usage: deal-harness run prep|nag");
+      return runJob(job as Job, log);
+    }
+    case "schedule":
+      return schedule(process.argv.includes("--remove"), log);
     case undefined:
     case "help":
     case "--help":

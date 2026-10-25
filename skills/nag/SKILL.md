@@ -7,15 +7,15 @@ description: Show what the user owes buyers and what buyers owe them, meaning ov
 
 ## Steps
 
-1. `memory_read` `memory/followups.md`. Each open `- [ ]` line with a date before today is overdue.
+1. `promises_due`: late promises with days late, and ones due soon, both the user's and the buyers'. Then `memory_read` `memory/followups.md` for the user's other reminders (open `- [ ]` lines dated before today).
 2. Look for threads waiting on someone:
    - **Waiting on the user:** `gmail_read` with query `in:inbox -from:me newer_than:14d`. Read the threads from known accounts (`memory_list` `memory/accounts`) where the last message is the buyer's and is more than 2 days old.
    - **Waiting on the buyer:** `gmail_read` with query `in:sent newer_than:30d`. Find threads where the user wrote last, more than 5 days ago, on an open deal.
 3. Show one short list, worst first: what, who, how late, source.
 4. Offer drafts. For each item the user picks, write a short nudge (2 to 4 sentences, one clear ask) and create it with `gmail_draft` on that thread. Follow `company/voice.md`.
-5. When the user says something is done, update its line in `memory/followups.md` from `- [ ]` to `- [x]` (read the file, then write it back).
+5. When the user says a promise is kept, call `promise_done`. For a follow-up in `memory/followups.md`, change its line from `- [ ]` to `- [x]` (read the file, then write it back).
 
-Don't nag about anything the user marked done, and don't invent due dates.
+Use the days late that `promises_due` gives; don't count days yourself. Don't nag about anything already done, and don't invent due dates.
 
 ## Rules for every step
 

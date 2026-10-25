@@ -1,3 +1,4 @@
 config.local.md
 index.sqlite
 index.sqlite-*
+runs/

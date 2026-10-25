@@ -12,3 +12,8 @@ Shared settings. Put machine-specific values (file paths) in `config.local.md`, 
 
 ## Google
 - oauth client:
+
+## Schedule
+- prep time: 18:00
+- nag time: 08:00
+- claude command: claude

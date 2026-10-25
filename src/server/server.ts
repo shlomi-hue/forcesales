@@ -8,6 +8,9 @@ import type { RateCard } from "../checks/rate-card.js";
 import { listEvents, readEvent, type Calendar } from "../tools/calendar.js";
 import { driveId, readDriveFile, searchDrive, type Drive } from "../tools/drive.js";
 import { createDraft, readThread, searchThreads, type Gmail } from "../tools/gmail.js";
+import { listMeetingsWithNotes, readMeetingNotes } from "../tools/meetings.js";
+import { completePromise, formatDue, logPromise, promisesDue } from "../tools/promises.js";
+import { stakeholderView } from "../tools/stakeholders.js";
 import { addSignal, memoryList, memoryRead, memorySearch, memoryWrite, type MemoryDeps, type WriteResult } from "../tools/memory.js";
 import { readTabs, tabsAsText, type Sheets } from "../tools/sheets.js";
 import { dataBlock, DATA_NOTE } from "./data-block.js";
@@ -176,6 +179,7 @@ export function buildServer(deps: ServerDeps, version: string): McpServer {
   const writeSummary = (r: WriteResult) => {
     const lines = [`${r.created ? "Created" : "Updated"} ${r.path}.`];
     if (r.keptSignals) lines.push(`${r.keptSignals} new signal(s) kept: quotes verified in their sources.`);
+    if (r.keptPromises) lines.push(`${r.keptPromises} new promise(s) kept: quotes verified in their sources.`);
     if (r.dropped.length) lines.push(`Dropped ${r.dropped.length} signal(s):`, ...r.dropped.map((d) => `- ${d}`));
     return [...lines, ...r.notes].join("\n");
   };
@@ -253,6 +257,85 @@ export function buildServer(deps: ServerDeps, version: string): McpServer {
         if (hits.length === 0) return text(`Nothing in memory matches: ${query}`);
         return text(dataBlock("memory/search", hits.map((h) => `${h.path} · ${h.heading}\n${h.snippet}`).join("\n\n")));
       }),
+  );
+
+  const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+  const source = z.string().regex(/^(gmail\/thread|drive\/file|calendar\/event)\/[\w-]+$/);
+
+  server.registerTool(
+    "meeting_notes",
+    {
+      title: "Read Gemini meeting notes",
+      description:
+        "Read the Gemini notes from a Google Meet call (the 'Notes by Gemini' Doc). Give event_id to get one meeting's notes, or leave it out to list past meetings (default: last 14 days) and whether each has notes. Use the notes' drive/file/<id> as the source for signals and promises. Returns an OUTSIDE_DATA block.",
+      inputSchema: {
+        event_id: z.string().optional(),
+        from: z.string().optional(),
+        to: z.string().optional(),
+        query: z.string().optional().describe("Words to match in meeting titles or attendees"),
+        max_results: z.number().int().min(1).max(100).default(25),
+      },
+      annotations: { readOnlyHint: true, openWorldHint: true },
+    },
+    ({ event_id, from, to, query, max_results }) =>
+      guarded(async () => {
+        if (event_id) return text(await readMeetingNotes(deps.calendar(), deps.drive(), event_id));
+        return text(await listMeetingsWithNotes(deps.calendar(), { from, to, query, max: max_results }));
+      }),
+  );
+
+  server.registerTool(
+    "promise_log",
+    {
+      title: "Log a promise",
+      description:
+        "Log something someone committed to on a deal: owner 'us' when the user promised it, 'them' when the buyer did. Needs the exact words of the promise as the quote and its source (email thread, notes doc); it's checked and dropped if the quote isn't found. Saved in memory/deals/<account>/promises.md.",
+      inputSchema: {
+        account: z.string().min(1),
+        owner: z.enum(["us", "them"]),
+        who: z.string().min(1).describe("Person who made the promise"),
+        what: z.string().min(3).describe("What they'll do, short, e.g. 'send the security questionnaire'"),
+        due: date.describe("When it's due, YYYY-MM-DD"),
+        quote: z.string().min(3).describe("Their exact words"),
+        source,
+      },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+    },
+    (input) => guarded(async () => text(writeSummary(await logPromise(deps.memory, input)))),
+  );
+
+  server.registerTool(
+    "promise_done",
+    {
+      title: "Mark a promise kept",
+      description: "Mark an open promise on a deal as kept. Give the account and a few words that match it.",
+      inputSchema: { account: z.string().min(1), match: z.string().min(2) },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    ({ account, match }) => guarded(async () => text(await completePromise(deps.memory, account, match))),
+  );
+
+  server.registerTool(
+    "promises_due",
+    {
+      title: "Promises that are late or due soon",
+      description: "List open promises across all deals that are late (with days late) or due in the next few days, both ours and the buyers'.",
+      inputSchema: { as_of: date.optional().describe("Default: today"), days_ahead: z.number().int().min(0).max(30).default(2) },
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
+    ({ as_of, days_ahead }) => guarded(async () => text(formatDue(promisesDue(deps.memory.dir, as_of, days_ahead)))),
+  );
+
+  server.registerTool(
+    "stakeholder_view",
+    {
+      title: "One stakeholder's view",
+      description:
+        "What one person at an account has said and promised, and their role: nothing else. Use it to rehearse a meeting: play each stakeholder only from their own view.",
+      inputSchema: { account: z.string().min(1), person: z.string().min(1).describe("Name as in the account's People section") },
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
+    ({ account, person }) => guarded(async () => text(stakeholderView(deps.memory, account, person))),
   );
 
   return server;
