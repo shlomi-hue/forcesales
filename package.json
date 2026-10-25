@@ -1,0 +1,36 @@
+{
+  "name": "deal-harness",
+  "version": "0.0.1",
+  "description": "Sales agent harness: skills, a local MCP tools server, and markdown deal memory. Writes Gmail drafts only, never sends.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "deal-harness": "dist/cli/index.js"
+  },
+  "files": [
+    "dist",
+    "skills",
+    "templates"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "serve": "node dist/cli/index.js serve",
+    "eval": "echo \"evals arrive in Phase 2\" && exit 1",
+    "lint": "echo \"lint tool not chosen yet\" && exit 1"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.1.12"
+  }
+}
