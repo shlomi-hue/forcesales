@@ -11,6 +11,7 @@ I install the harness on my machine with one command, point it at my Gmail and a
 - Sending email: never.
 
 ## Phase 1 — Skeleton and one safe draft
+**Status:** code and unit tests done; live Claude Code check against the real account pending.
 **Done when:** from Claude Code I can ask the harness to read a real Gmail thread and create a draft reply, and a draft with a price below the rate card is refused with a reason.
 - npm package scaffold with the stack in CLAUDE.md; `deal-harness serve` starts the stdio MCP server.
 - Google OAuth (Desktop client), token in the OS keychain.
