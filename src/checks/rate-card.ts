@@ -35,6 +35,10 @@ export interface RateRow {
   // Where the floor came from: a floor column, list price minus max discount, or the list price.
   floorFrom: "floor" | "list-discount" | "list";
   currencies: string[];
+  // The list price, when the card has one for this row.
+  list?: number;
+  // Highest discount allowed off the list price, as a fraction (0.2 = 20%).
+  maxDiscount?: number;
   minQty?: number;
   maxQty?: number;
   // Words that tell variants apart: tab title, price column header, unit.
@@ -117,7 +121,7 @@ function parsePercent(cell: string): number | null {
   if (!m?.[1]) return null;
   const v = Number(m[1].replace(",", "."));
   const frac = cell.includes("%") || v > 1 ? v / 100 : v;
-  return frac >= 0 && frac < 1 ? frac : null;
+  return frac >= 0 && frac <= 1 ? frac : null;
 }
 
 const colLetter = (i: number): string =>
@@ -176,12 +180,16 @@ export function parseRateCard(tabs: SheetTab[], overrides?: ColumnOverrides): Ra
         if (!price) continue;
         const currencies = rowCurrency.length ? rowCurrency : price.currencies.length ? price.currencies : currencyMentioned(col.header);
         const floor = from === "list-discount" ? round2(price.value * (1 - (discount ?? 0))) : price.value;
+        // With a floor column, the list price is the single list column beside it, if there is exactly one.
+        const list = from === "floor" ? (lists.length === 1 ? parsePriceCell(lists[0]?.text ?? "")?.value : undefined) : price.value;
         rows.push({
           names,
           display,
           floor,
           floorFrom: from,
           currencies,
+          ...(list !== undefined ? { list } : {}),
+          ...(discount !== null ? { maxDiscount: discount } : {}),
           ...(minQty !== undefined ? { minQty } : {}),
           ...(maxQty !== undefined ? { maxQty } : {}),
           labels: [tab.title, col.header, ...unit].map(norm).filter(Boolean),
@@ -211,3 +219,18 @@ function numberIn(text: string | undefined): number | undefined {
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
+
+export type ItemMatch = { rows: RateRow[] } | { error: string };
+
+// Find the rate card rows for an item name or code: exact first, then one unambiguous partial match.
+export function matchItem(card: RateCard, item: string): ItemMatch {
+  const wanted = norm(item);
+  const exact = card.rows.filter((r) => r.names.includes(wanted));
+  if (exact.length > 0) return { rows: exact };
+  const partial = card.rows.filter((r) => r.names.some((n) => n.includes(wanted) || (n.length > 2 && wanted.includes(n))));
+  const distinct = new Set(partial.map((r) => r.display));
+  if (distinct.size === 1) return { rows: partial };
+  if (distinct.size > 1) return { error: `"${item}" matches several rate card items (${[...distinct].slice(0, 8).join(", ")}). Use the exact name.` };
+  const known = [...new Set(card.rows.map((r) => r.display))].slice(0, 15).join(", ");
+  return { error: `no item called "${item}" in the rate card. Known items: ${known}.` };
+}

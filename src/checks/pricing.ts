@@ -2,7 +2,7 @@
 // or that mentions a money amount it didn't declare. Pure function.
 
 import { currenciesCompatible, findAmounts, type MoneyAmount } from "./money.js";
-import { norm, type RateCard, type RateRow } from "./rate-card.js";
+import { matchItem, norm, type RateCard, type RateRow } from "./rate-card.js";
 
 export interface DeclaredPrice {
   // Item name or code as it appears in the rate card.
@@ -55,19 +55,9 @@ export function pricingCheck(input: { body: string; prices: DeclaredPrice[]; car
 
 function checkOne(p: DeclaredPrice, amounts: MoneyAmount[], card: RateCard): string[] {
   const label = `"${p.item}" at ${fmt(p.unit_price, p.currency ? [p.currency.toUpperCase()] : [])}`;
-  const wanted = norm(p.item);
-
-  let rows = card.rows.filter((r) => r.names.includes(wanted));
-  if (rows.length === 0) {
-    const partial = card.rows.filter((r) => r.names.some((n) => n.includes(wanted) || (n.length > 2 && wanted.includes(n))));
-    const distinct = new Set(partial.map((r) => r.display));
-    if (distinct.size === 1) rows = partial;
-    else if (distinct.size > 1) return [`${label}: "${p.item}" matches several rate card items (${[...distinct].slice(0, 8).join(", ")}). Use the exact name.`];
-  }
-  if (rows.length === 0) {
-    const known = [...new Set(card.rows.map((r) => r.display))].slice(0, 15).join(", ");
-    return [`${label}: no item called "${p.item}" in the rate card. Known items: ${known}.`];
-  }
+  const match = matchItem(card, p.item);
+  if ("error" in match) return [`${label}: ${match.error}`];
+  let rows = match.rows;
 
   if (p.variant) {
     const v = norm(p.variant);

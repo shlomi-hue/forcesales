@@ -3,6 +3,7 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import type { CheckRules } from "../checks/draft.js";
 import type { RateCard } from "../checks/rate-card.js";
 import { createDraft, readThread, searchThreads, type Gmail } from "../tools/gmail.js";
 import { readTabs, tabsAsText, type Sheets } from "../tools/sheets.js";
@@ -14,6 +15,8 @@ export interface ServerDeps {
   gmail: () => Gmail;
   sheets: () => Sheets;
   loadRateCard: () => Promise<RateCard | null>;
+  rules: () => Promise<CheckRules>;
+  internalIds: string[];
 }
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] });
@@ -36,6 +39,11 @@ const declaredPrice = z.object({
   quantity: z.number().positive().optional().describe("Number of units; needed for volume tiers"),
   currency: z.string().length(3).optional().describe("ISO code like USD or SGD; read from the body if left out"),
   variant: z.string().optional().describe("Which price when an item has several, e.g. 'annual' or a tab name"),
+});
+
+const declaredDiscount = z.object({
+  item: z.string().min(1).optional().describe("Rate card item it applies to; leave out for the whole deal"),
+  percent: z.number().describe("Percent off; 100 for something given free, like a waived fee or free month"),
 });
 
 export function buildServer(deps: ServerDeps, version: string): McpServer {
@@ -87,7 +95,7 @@ export function buildServer(deps: ServerDeps, version: string): McpServer {
     {
       title: "Create a Gmail draft",
       description:
-        "Create a Gmail draft for the user to review and send themselves. It never sends. Give thread_id to reply on a thread (recipient and subject default from the last message), or to and subject for a new email. Declare every price the body quotes in prices, with its rate card item. The draft is checked first: a price below the rate card floor, or any money amount in the body that isn't declared, means no draft is made and the reasons come back.",
+        "Create a Gmail draft for the user to review and send themselves. It never sends. Give thread_id to reply on a thread (recipient and subject default from the last message), or to and subject for a new email. Declare every price the body quotes in prices, and every discount or freebie in discounts. The draft is checked first: recipients must already be on the thread (or emailed before, for a new email); prices can't go below the rate card floor; discounts can't go past the limit; no banned words or placeholders; nothing internal (floors, the rate card, deal notes, other customers, other people's addresses). If any check fails, no draft is made and the reasons come back.",
       inputSchema: {
         thread_id: z.string().optional().describe("Thread to reply on"),
         to: z.array(address).optional(),
@@ -96,12 +104,13 @@ export function buildServer(deps: ServerDeps, version: string): McpServer {
         subject: noBreaks("Subject").optional(),
         body: z.string().min(1).describe("Plain text body"),
         prices: z.array(declaredPrice).default([]).describe("Every price quoted in the body"),
+        discounts: z.array(declaredDiscount).default([]).describe("Every discount or free item offered in the body"),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
     },
     (input) =>
       guarded(async () => {
-        const result = await createDraft({ gmail: deps.gmail(), loadRateCard: deps.loadRateCard }, input);
+        const result = await createDraft({ gmail: deps.gmail(), loadRateCard: deps.loadRateCard, rules: deps.rules, internalIds: deps.internalIds }, input);
         if (!result.created) {
           return fail(`REFUSED: no draft was created.\n${result.reasons.map((r) => `- ${r}`).join("\n")}`);
         }

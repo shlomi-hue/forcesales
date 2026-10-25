@@ -2,6 +2,7 @@ import { gmail } from "@googleapis/gmail";
 import { sheets } from "@googleapis/sheets";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import type { OAuth2Client } from "google-auth-library";
+import { DEFAULT_BANNED } from "../checks/words.js";
 import { readConfig } from "../config.js";
 import { authorizedClient } from "../google/auth.js";
 import { keychainStore } from "../google/token-store.js";
@@ -23,6 +24,12 @@ export async function serve(version: string): Promise<void> {
         config.rateCardSheet
           ? loadRateCard(getSheets(), config.rateCardSheet, config.rateCardRange, config.rateCardColumns)
           : null,
+      rules: async () => ({
+        maxDiscountPercent: config.maxDiscountPercent,
+        banned: config.bannedWords ?? DEFAULT_BANNED,
+        accounts: [],
+      }),
+      internalIds: config.rateCardSheet ? [config.rateCardSheet] : [],
     },
     version,
   );

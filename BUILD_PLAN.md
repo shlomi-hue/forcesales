@@ -21,6 +21,7 @@ I install the harness on my machine with one command, point it at my Gmail and a
 **Check:** unit tests for `pricing.check` pass and fail as expected; in Claude Code, read one thread, create one draft, see it in Gmail Drafts; try a below-floor price and see the refusal.
 
 ## Phase 2 — All checks and safety
+**Status:** done. Unit tests per check pass; `npm run eval -- injection` shows 0 behavior changes on 12 poisoned threads. Live check pending with Phase 1's.
 **Done when:** every draft passes through all checks, and planted instructions in emails change nothing.
 - `discount.check`, `words.check`, `leak.check`, `recipient.check` inside `gmail.draft`; `quote.check` inside signal writes.
 - Outside text returned in a marked data block.

@@ -21,7 +21,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "serve": "node dist/cli/index.js serve",
-    "eval": "echo \"evals arrive in Phase 2\" && exit 1",
+    "eval": "vitest run --config evals/vitest.config.ts",
     "lint": "eslint ."
   },
   "dependencies": {

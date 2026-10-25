@@ -1,6 +1,9 @@
 import type { gmail_v1 } from "@googleapis/gmail";
 import { findAmounts } from "../checks/money.js";
-import { pricingCheck, type DeclaredPrice } from "../checks/pricing.js";
+import { addressesIn, companyDomain } from "../checks/addresses.js";
+import { findDiscounts, type DeclaredDiscount } from "../checks/discount.js";
+import { draftChecks, type CheckRules } from "../checks/draft.js";
+import type { DeclaredPrice } from "../checks/pricing.js";
 import type { RateCard } from "../checks/rate-card.js";
 import { dataBlock } from "../server/data-block.js";
 
@@ -108,6 +111,7 @@ export interface DraftInput {
   subject?: string;
   body: string;
   prices: DeclaredPrice[];
+  discounts: DeclaredDiscount[];
 }
 
 export type DraftResult =
@@ -116,34 +120,37 @@ export type DraftResult =
 
 export interface DraftDeps {
   gmail: Gmail;
-  // Loaded only when the draft has prices. null means no rate card is configured.
+  // Loaded only when the draft has prices or discounts. null means no rate card is configured.
   loadRateCard: () => Promise<RateCard | null>;
+  rules: () => Promise<CheckRules>;
+  // Sheet and file ids that must never appear in a draft (the rate card, at least).
+  internalIds: string[];
 }
 
 // Runs every check before anything is written to Gmail. A failed check means no draft.
 export async function createDraft(deps: DraftDeps, input: DraftInput): Promise<DraftResult> {
-  const needsCard = input.prices.length > 0 || findAmounts(input.body).length > 0;
-  const card = needsCard ? await deps.loadRateCard() : null;
-  const pricing = pricingCheck({ body: input.body, prices: input.prices, card });
-  if (!pricing.ok) return { created: false, reasons: pricing.reasons };
-
+  const { gmail } = deps;
+  const ownEmail = (await gmail.users.getProfile({ userId: "me" })).data.emailAddress?.toLowerCase() ?? "";
   let to = input.to ?? [];
   let subject = input.subject ?? "";
+  let participants: string[] | null = null;
   const threading: string[] = [];
 
   if (input.thread_id) {
-    const { data } = await deps.gmail.users.threads.get({
+    const { data } = await gmail.users.threads.get({
       userId: "me",
       id: input.thread_id,
       format: "metadata",
-      metadataHeaders: ["From", "To", "Reply-To", "Subject", "Message-ID", "References"],
+      metadataHeaders: ["From", "To", "Cc", "Reply-To", "Subject", "Message-ID", "References"],
     });
-    const last = data.messages?.at(-1);
+    const messages = data.messages ?? [];
+    const last = messages.at(-1);
     if (!last) return { created: false, reasons: [`Thread ${input.thread_id} has no messages.`] };
+    // Reply-To is left out on purpose: a stranger's Reply-To doesn't make them part of the thread.
+    participants = [...new Set(messages.flatMap((m) => ["From", "To", "Cc"].flatMap((h) => addressesIn(header(m, h)))))];
     if (to.length === 0) {
-      const me = (await deps.gmail.users.getProfile({ userId: "me" })).data.emailAddress?.toLowerCase() ?? "";
-      const from = header(last, "Reply-To") || header(last, "From");
-      to = [from.toLowerCase().includes(me) && me ? header(last, "To") : from].filter(Boolean);
+      const lastFrom = addressesIn(header(last, "From"))[0] ?? "";
+      to = splitAddressList(lastFrom === ownEmail ? header(last, "To") : header(last, "Reply-To") || header(last, "From"));
     }
     if (!subject) {
       const s = header(last, "Subject");
@@ -152,11 +159,26 @@ export async function createDraft(deps: DraftDeps, input: DraftInput): Promise<D
     const msgId = header(last, "Message-ID");
     if (msgId) threading.push(`In-Reply-To: ${msgId}`, `References: ${[header(last, "References"), msgId].filter(Boolean).join(" ")}`);
   }
-
   if (to.length === 0) return { created: false, reasons: ["No recipient. Give `to`, or a thread_id to reply on."] };
 
-  const raw = buildMime({ to, cc: input.cc ?? [], bcc: input.bcc ?? [], subject, body: input.body, extra: threading });
-  const res = await deps.gmail.users.drafts.create({
+  const cc = input.cc ?? [];
+  const bcc = input.bcc ?? [];
+  const text = `${subject}\n${input.body}`;
+  const needsCard = input.prices.length > 0 || input.discounts.length > 0 || findAmounts(text).length > 0 || findDiscounts(text).length > 0;
+  const [card, rules, knownAddresses] = await Promise.all([
+    needsCard ? deps.loadRateCard() : Promise.resolve(null),
+    deps.rules(),
+    participants ? Promise.resolve([]) : sentBefore(gmail, [...to, ...cc]),
+  ]);
+
+  const checks = draftChecks({
+    to, cc, bcc, subject, body: input.body, prices: input.prices, discounts: input.discounts,
+    card, rules, ownEmail, threadParticipants: participants, knownAddresses, internalIds: deps.internalIds,
+  });
+  if (!checks.ok) return { created: false, reasons: checks.reasons };
+
+  const raw = buildMime({ to, cc, bcc, subject, body: input.body, extra: threading });
+  const res = await gmail.users.drafts.create({
     userId: "me",
     requestBody: { message: { raw, ...(input.thread_id ? { threadId: input.thread_id } : {}) } },
   });
@@ -167,6 +189,30 @@ export async function createDraft(deps: DraftDeps, input: DraftInput): Promise<D
     threadId: res.data.message?.threadId ?? null,
     to,
   };
+}
+
+// Split a header like `"Lee, Dana" <dana@acme.com>, bob@x.com` on commas outside quotes, keeping names.
+function splitAddressList(value: string): string[] {
+  return value
+    .split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)
+    .map((s) => s.trim())
+    .filter((s) => s.includes("@"));
+}
+
+// Which of these addresses (or their company domains) the user has sent mail to before.
+async function sentBefore(gmail: Gmail, recipients: string[]): Promise<string[]> {
+  const known: string[] = [];
+  for (const address of recipients.flatMap(addressesIn)) {
+    const hit = async (who: string) =>
+      ((await gmail.users.threads.list({ userId: "me", q: `in:sent (to:${who} OR cc:${who})`, maxResults: 1 })).data.threads ?? []).length > 0;
+    if (await hit(address)) {
+      known.push(address);
+      continue;
+    }
+    const domain = companyDomain(address);
+    if (domain && (await hit(domain))) known.push(`@${domain}`);
+  }
+  return known;
 }
 
 const noBreaks = (s: string) => s.replace(/[\r\n]+/g, " ").trim();

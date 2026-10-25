@@ -5,7 +5,7 @@ import { parseRateCard } from "../../src/checks/rate-card.js";
 import { buildServer } from "../../src/server/server.js";
 import type { Sheets } from "../../src/tools/sheets.js";
 import { simple } from "../checks/fixtures.js";
-import { fakeGmail } from "../tools/fake-google.js";
+import { fakeGmail, rules } from "../tools/fake-google.js";
 
 const fakeSheets = {
   spreadsheets: {
@@ -16,7 +16,10 @@ const fakeSheets = {
 
 async function connect() {
   const { gmail, drafts } = fakeGmail();
-  const server = buildServer({ gmail: () => gmail, sheets: () => fakeSheets, loadRateCard: async () => parseRateCard(simple) }, "test");
+  const server = buildServer(
+    { gmail: () => gmail, sheets: () => fakeSheets, loadRateCard: async () => parseRateCard(simple), rules: async () => rules, internalIds: [] },
+    "test",
+  );
   const [a, b] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: "test", version: "1" });
   await Promise.all([server.connect(a), client.connect(b)]);
@@ -36,7 +39,7 @@ describe("MCP server", () => {
     const { client, drafts } = await connect();
     const r = await client.callTool({ name: "gmail_draft", arguments: { thread_id: "t-123", body: "Pro at $40", prices: [{ item: "Pro", unit_price: 40 }] } });
     expect(r.isError).toBe(true);
-    expect(textOf(r)).toMatch(/^REFUSED: no draft was created\.\n- "Pro" at 40 is below the rate card floor of 50 USD/);
+    expect(textOf(r)).toMatch(/^REFUSED: no draft was created\.\n- \[pricing\] "Pro" at 40 is below the rate card floor of 50 USD/);
     expect(drafts).toHaveLength(0);
   });
 
@@ -58,7 +61,7 @@ describe("MCP server", () => {
   it("reads a sheet into a data block", async () => {
     const { client } = await connect();
     const r = await client.callTool({ name: "sheets_read", arguments: { spreadsheet: "https://docs.google.com/spreadsheets/d/abc123/edit" } });
-    expect(textOf(r)).toMatch(/^<<<OUTSIDE_DATA source="sheets\/abc123">>>\n## Rate card\n1\tSKU\tProduct/);
+    expect(textOf(r)).toMatch(/^<<<OUTSIDE_DATA id=\w+ source="sheets\/abc123">>>\n## Rate card\n1\tSKU\tProduct/);
   });
 
   it("says how to sign in when there's no token", async () => {
@@ -69,6 +72,8 @@ describe("MCP server", () => {
         },
         sheets: () => fakeSheets,
         loadRateCard: async () => null,
+        rules: async () => rules,
+        internalIds: [],
       },
       "test",
     );
