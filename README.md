@@ -41,6 +41,9 @@ A sales agent harness that runs inside Claude Code (and later Claude Desktop, Co
 | `calibration_score` | How well probabilities matched confirmed outcomes (Brier score, predicted vs actual) |
 | `pdf_export` | A memory file as a PDF in `<data>/exports/` |
 | `stakeholder_view` | One person's role, words and promises, nothing else (for /prep's rehearsal) |
+| `edits_capture` | Pairs harness drafts with what you sent; records the words you cut, changed or added |
+| `lessons_learn` | Proposes lessons from edits repeated in 3+ drafts and from confirmed outcomes |
+| `lesson_propose` | The agent proposes one lesson with its evidence |
 
 Everything from outside (mail, files, events, memory) comes back inside an `OUTSIDE_DATA` block. MCP tool names use `_` rather than `.`, because Claude's tool-name rules don't allow dots.
 
@@ -51,7 +54,7 @@ A draft is created only if all of these pass. Otherwise you get every reason bac
 - **recipient:** a reply only goes to people on the thread, or others at their company. A new email only goes to people you've emailed before. Bcc only goes to your own domain. A planted Reply-To doesn't count as being on the thread.
 - **pricing:** every money amount in the body is a declared price, line total or grand total, and no price is below its rate card floor.
 - **discount:** every discount or freebie is declared. None goes past the rate card's max discount (or `max discount` in config), or pushes list price below the floor.
-- **words:** nothing from the default risky-promise list or your `company/voice.md` "Never say" list, and no unfilled placeholders.
+- **words:** nothing from the default risky-promise list, your `company/voice.md` "Never say" list or your accepted "Never write" lessons, and no unfilled placeholders.
 - **leak:** no internal terms (floor, margin, win probability…), no rate card link, no local paths, no outside people's addresses, and no other customers' names.
 
 `quote.check` runs inside every memory write that adds a signal.
@@ -62,7 +65,7 @@ A draft is created only if all of these pass. Otherwise you get every reason bac
 - `/account`: build or refresh one account's file.
 - `/signals`: capture signals and promises from a thread, a file or a meeting's Gemini notes.
 - `/nag`: what's late, and nudge drafts.
-- `/proposal`: a checked pricing or proposal draft, with a deslop pass.
+- `/proposal`: a checked pricing or proposal draft, with a deslop pass and a buyer critic (`buyer critic: off` in config.md turns it off).
 - `/war`: an RFP battle card against one competitor, exported as a PDF.
 - `/history`: rebuild past deals from mail; ICP map and baseline from the outcomes you confirm.
 - `/plan`: a close plan and a pre-mortem built from how similar deals were lost.
@@ -73,6 +76,10 @@ A draft is created only if all of these pass. Otherwise you get every reason bac
 ## Confirming past outcomes
 
 /history guesses how each past deal ended and saves it unconfirmed in `memory/history/outcomes.md`. Run `node dist/cli/index.js confirm` to go through them (y = right, w/l/n = it was won/lost/no decision, d = not a deal), or tick `[x]` by hand. The agent can't confirm outcomes, and unconfirmed ones never count in the ICP map, calibration or lessons.
+
+## Lessons
+
+Each draft the harness makes is remembered (in `memory/edits/pending.json`, git-ignored). `edits_capture`, or `node dist/cli/index.js learn`, pairs it with the email you actually sent and saves only the changed words in `memory/edits/<month>.md`. When you cut or change the same words in 3 or more drafts, or 3 or more confirmed deals share a loss reason, a lesson is proposed in `memory/lessons/proposed.md`. Run `node dist/cli/index.js lessons` to accept (a) or reject (r) each one. Accepted voice lessons go to `memory/lessons/accepted.md`, and "Never write" ones are then refused by `gmail_draft`; accepted plays go to `company/playbook.md`. Rejected lessons are never proposed again. The agent can propose, never accept.
 
 ## Scheduled runs
 

@@ -20,8 +20,8 @@ describe("MCP server", () => {
     const { client } = await connect();
     const names = (await client.listTools()).tools.map((t) => t.name).sort();
     expect(names).toEqual([
-      "calendar_read", "calibration_score", "deal_prior", "drive_read", "forecast", "gmail_draft", "gmail_read", "history_stats",
-      "mail_scan", "meeting_notes", "memory_add_signal", "memory_list", "memory_read", "memory_search", "memory_write",
+      "calendar_read", "calibration_score", "deal_prior", "drive_read", "edits_capture", "forecast", "gmail_draft", "gmail_read", "history_stats",
+      "lesson_propose", "lessons_learn", "mail_scan", "meeting_notes", "memory_add_signal", "memory_list", "memory_read", "memory_search", "memory_write",
       "outcome_log", "pdf_export", "pipeline_read", "probability_set", "promise_done", "promise_log", "promises_due",
       "scenario_model", "sent_samples", "sheets_read", "similar_deals", "stakeholder_view",
     ]);
@@ -113,5 +113,20 @@ describe("MCP server", () => {
     const w = textOf(await client.callTool({ name: "scenario_model", arguments: { period: "2026-Q4", name: "Acme slips", changes: [{ account: "Acme", close: "2027-01-05" }] } }));
     expect(w).toContain('Scenario "Acme slips" for 2026-Q4.');
     expect(w).toContain("- USD: expected -19200 · likely +0 · possible -48000 · won +0");
+  });
+});
+
+describe("gmail_draft and the learning loop", () => {
+  it("remembers each created draft so edits_capture can compare it with what's sent", async () => {
+    const { readPending } = await import("../../src/memory/edits.js");
+    const { gmail } = fakeGmail();
+    const deps = testDeps({ gmail });
+    const server = buildServer(deps, "test");
+    const [a, b] = InMemoryTransport.createLinkedPair();
+    const client = new Client({ name: "test", version: "1" });
+    await Promise.all([server.connect(a), client.connect(b)]);
+    await client.callTool({ name: "gmail_draft", arguments: { thread_id: "t-123", body: "Pro at $55", prices: [{ item: "Pro", unit_price: 55 }] } });
+    await client.callTool({ name: "gmail_draft", arguments: { thread_id: "t-123", body: "Pro at $40", prices: [{ item: "Pro", unit_price: 40 }] } });
+    expect(readPending(deps.memory.dir)).toMatchObject([{ draftId: "d-1", body: "Pro at $55" }]);
   });
 });

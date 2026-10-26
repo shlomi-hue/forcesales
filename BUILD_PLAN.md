@@ -64,6 +64,7 @@ I install the harness on my machine with one command, point it at my Gmail and a
 **Check:** a what-if changes the quarter total by the amount a manual calculation gives; the calibration report runs on confirmed history.
 
 ## Phase 7 — Learning loop
+**Status:** built and unit-tested. `gmail_draft` remembers each draft; `edits_capture` (or `deal-harness learn`) pairs it with the sent email and keeps only the changed words in `memory/edits/<month>.md`. `lessons_learn` counts in code: the same words cut or changed in 3+ drafts become a proposed voice rule; a loss reason or competitor shared by 3+ confirmed losses becomes a proposed play. `deal-harness lessons` is the only way to accept (voice → accepted.md, play → playbook.md) or reject; accepted "Never write" rules are enforced by `gmail_draft`; rejected ones are never proposed again. Buyer critic in /proposal, `buyer critic: on|off` in config.md. Live check pending (needs three real sent drafts).
 **Done when:** my edits to drafts turn into proposed voice rules, and the buyer critic's objections show next to each draft.
 - `capture-sent` pairs drafts with sent mail; `edits/`.
 - `scripts/learn` proposes lessons from outcomes and edits; /company shows them for approval; `playbook.md`.

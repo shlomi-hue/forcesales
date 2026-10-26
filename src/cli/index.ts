@@ -6,6 +6,7 @@ import { login } from "../google/auth.js";
 import { keychainStore } from "../google/token-store.js";
 import { reindex } from "../index/search.js";
 import { confirmOutcomes } from "./confirm.js";
+import { learnNow, reviewLessons } from "./lessons.js";
 import { runJob, type Job } from "./run.js";
 import { schedule } from "./schedule.js";
 import { serve } from "./serve.js";
@@ -21,6 +22,8 @@ const HELP = `deal-harness ${version}
   deal-harness run prep|nag        run one job now, headless (needs Claude Code's claude command)
   deal-harness schedule [--remove] run prep each evening and nag each morning (macOS, Linux)
   deal-harness confirm  go through past deal outcomes the harness inferred, and confirm or fix them
+  deal-harness learn    record what you changed in sent drafts, and propose lessons
+  deal-harness lessons  accept or reject proposed lessons
 
 Settings live in config.md in your data folder. Environment variables override them:
   DEAL_HARNESS_DATA               data folder (default ~/deal-harness-data)
@@ -56,6 +59,10 @@ async function main(): Promise<void> {
     }
     case "confirm":
       return confirmOutcomes(log);
+    case "learn":
+      return learnNow(log);
+    case "lessons":
+      return reviewLessons(log);
     case "schedule":
       return schedule(process.argv.includes("--remove"), log);
     case undefined:

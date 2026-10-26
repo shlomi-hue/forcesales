@@ -27,8 +27,12 @@ export const TOOL_ONLY: Record<string, string> = {
   "memory/history/baseline.md": "history_stats",
   "company/icp-map.md": "history_stats",
   "memory/history/calibration.md": "calibration_score",
+  "memory/lessons/proposed.md": "lessons_learn or lesson_propose",
 };
-const TOOL_ONLY_PATTERNS: [RegExp, string][] = [[/^memory\/deals\/[^/]+\/probabilities\.md$/, "probability_set"]];
+const TOOL_ONLY_PATTERNS: [RegExp, string][] = [
+  [/^memory\/deals\/[^/]+\/probabilities\.md$/, "probability_set"],
+  [/^memory\/edits\//, "edits_capture"],
+];
 const toolFor = (r: string) => TOOL_ONLY[r] ?? TOOL_ONLY_PATTERNS.find(([re]) => re.test(r))?.[1];
 
 // Create the folder from the template on first use. Returns true when it was just created.

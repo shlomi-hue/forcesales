@@ -7,6 +7,7 @@ import type { CheckRules } from "../checks/draft.js";
 import type { OtherAccount } from "../checks/leak.js";
 import { DEFAULT_BANNED } from "../checks/words.js";
 import { readConfig, type Config } from "../config.js";
+import { bannedFromLessons } from "../memory/lessons.js";
 
 export function parseSettings(markdown: string): Record<string, string> {
   const out: Record<string, string> = {};
@@ -71,6 +72,11 @@ export function knownAccounts(dir: string): OtherAccount[] {
 }
 
 export function loadRules(dir: string, config: Config): CheckRules {
-  const banned = config.bannedWords ?? [...DEFAULT_BANNED, ...neverSay(read(join(dir, "company", "voice.md")))];
+  // Accepted voice lessons ("Never write ...") add to the list; proposed ones never do.
+  const banned = config.bannedWords ?? [
+    ...DEFAULT_BANNED,
+    ...neverSay(read(join(dir, "company", "voice.md"))),
+    ...bannedFromLessons(read(join(dir, "memory", "lessons", "accepted.md"))),
+  ];
   return { maxDiscountPercent: config.maxDiscountPercent, banned, accounts: knownAccounts(dir) };
 }
