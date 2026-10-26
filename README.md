@@ -8,7 +8,7 @@ A sales agent harness that runs inside Claude Code (and later Claude Desktop, Co
 2. **Build:** `npm install && npm run build`
 3. **Data folder:** run `node dist/cli/index.js reindex` once. It creates `~/deal-harness-data` from `templates/data/` (set `DEAL_HARNESS_DATA` to put it somewhere else) and starts a git repo there.
 4. **Settings:**
-   - In `~/deal-harness-data/config.md`, set `rate card sheet` (a link is fine) and `max discount`.
+   - In `~/deal-harness-data/config.md`, set `rate card sheet` (a link is fine), `deals sheet` (your pipeline) and `max discount`.
    - In `config.local.md` (not committed), add `- oauth client: /path/to/client_secret.json`.
 5. **Sign in:** `node dist/cli/index.js login`. The refresh token goes in your OS keychain. If you signed in during Phase 1, sign in again to grant Drive and Calendar access.
 6. **Hook into Claude Code:** copy `.mcp.example.json` to `.mcp.json`, fix the path, and open Claude Code in this folder. The skills load from `.claude/skills` (a link to `skills/`).
@@ -33,6 +33,12 @@ A sales agent harness that runs inside Claude Code (and later Claude Desktop, Co
 | `outcome_log` | A past deal's outcome with its evidence, always unconfirmed |
 | `history_stats` | ICP map and calibration baseline, computed from confirmed outcomes |
 | `similar_deals` | Past deals most like a given one, with what worked and went wrong |
+| `pipeline_read` | Deals from your deals Sheet (any layout), with the harness's latest probabilities |
+| `deal_prior` | Base win rate for a deal like this one, from confirmed history |
+| `probability_set` | Log a win probability with its reason (append-only) |
+| `forecast` | Won, expected, likely and possible for a period, per currency |
+| `scenario_model` | What-ifs: change deals and see the forecast move |
+| `calibration_score` | How well probabilities matched confirmed outcomes (Brier score, predicted vs actual) |
 | `pdf_export` | A memory file as a PDF in `<data>/exports/` |
 | `stakeholder_view` | One person's role, words and promises, nothing else (for /prep's rehearsal) |
 
@@ -59,6 +65,9 @@ A draft is created only if all of these pass. Otherwise you get every reason bac
 - `/proposal`: a checked pricing or proposal draft, with a deslop pass.
 - `/war`: an RFP battle card against one competitor, exported as a PDF.
 - `/history`: rebuild past deals from mail; ICP map and baseline from the outcomes you confirm.
+- `/plan`: a close plan and a pre-mortem built from how similar deals were lost.
+- `/rift`: forecast scenarios and what-ifs, with every number computed by the harness.
+- `/report`: forecast, calibration and what's working.
 - `/prep`: a meeting brief with a stakeholder-by-stakeholder rehearsal.
 
 ## Confirming past outcomes

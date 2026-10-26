@@ -1,6 +1,7 @@
 // Memory tools: list, read, write, add a signal, search. Everything stays inside the data folder.
 // Every write that adds a signal runs quote.check; signals whose quote isn't in their source are dropped.
 
+import { localToday } from "../dates.js";
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { quoteCheck } from "../checks/quote.js";
@@ -26,7 +27,7 @@ export interface WriteResult {
 }
 
 const MAX_QUOTE = 400;
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => localToday();
 
 export async function memoryList(deps: MemoryDeps, sub = ""): Promise<string> {
   const notes = await prepare(deps);

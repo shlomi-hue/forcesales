@@ -9,7 +9,8 @@ import { loadConfig, loadRules } from "../data/settings.js";
 import { authorizedClient } from "../google/auth.js";
 import { keychainStore } from "../google/token-store.js";
 import { buildServer } from "../server/server.js";
-import { loadRateCard } from "../tools/sheets.js";
+import { parsePipeline } from "../pipeline/deals.js";
+import { loadRateCard, readTabs } from "../tools/sheets.js";
 import { sourceReader } from "../tools/sources.js";
 
 export async function serve(version: string): Promise<void> {
@@ -37,6 +38,15 @@ export async function serve(version: string): Promise<void> {
         return c.rateCardSheet ? loadRateCard(clients.sheets(), c.rateCardSheet, c.rateCardRange, c.rateCardColumns) : null;
       },
       rules: async () => loadRules(dir, config()),
+      loadPipeline: async () => {
+        const c = config();
+        if (!c.dealsSheet) return null;
+        const [formatted, raw] = await Promise.all([
+          readTabs(clients.sheets(), c.dealsSheet, c.dealsRange),
+          readTabs(clients.sheets(), c.dealsSheet, c.dealsRange, true),
+        ]);
+        return parsePipeline(formatted, raw, c.dealsColumns);
+      },
       get internalIds() {
         const id = config().rateCardSheet;
         return id ? [id] : [];

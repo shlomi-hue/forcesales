@@ -1,6 +1,7 @@
 // The MCP server. Read tools and one write tool: gmail_draft. Nothing here sends,
 // forwards, shares or labels mail, and nothing ever will.
 
+import { localToday } from "../dates.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { CheckRules } from "../checks/draft.js";
@@ -9,6 +10,9 @@ import { listEvents, readEvent, type Calendar } from "../tools/calendar.js";
 import { driveId, readDriveFile, searchDrive, type Drive } from "../tools/drive.js";
 import { createDraft, readThread, searchThreads, type Gmail } from "../tools/gmail.js";
 import { exportPdf } from "../tools/export.js";
+import { formatForecast, forecast, parsePeriod, scenario } from "../forecast/model.js";
+import type { PipelineDeal } from "../pipeline/deals.js";
+import { calibrationScore, dealPrior, setProbability, withHarnessProbabilities } from "../tools/forecast.js";
 import { findSimilar, historyStats, logOutcome, scanDefaults } from "../tools/history.js";
 import { scanMail, scanReport, scanTable, sentSamples } from "../tools/scan.js";
 import { listMeetingsWithNotes, readMeetingNotes } from "../tools/meetings.js";
@@ -28,6 +32,8 @@ export interface ServerDeps {
   memory: MemoryDeps;
   loadRateCard: () => Promise<RateCard | null>;
   rules: () => Promise<CheckRules>;
+  // The deals Sheet, or null when none is set in config.md.
+  loadPipeline: () => Promise<{ deals: PipelineDeal[]; warnings: string[] } | null>;
   internalIds: string[];
 }
 
@@ -384,7 +390,7 @@ export function buildServer(deps: ServerDeps, version: string): McpServer {
           top: input.top,
         };
         const r = await scanMail(deps.gmail(), dir, opts);
-        await memoryWrite(deps.memory, { path: "memory/history/scan.md", content: scanTable(r.domains, opts, new Date().toISOString().slice(0, 10)), mode: "replace" }, "Mail scan");
+        await memoryWrite(deps.memory, { path: "memory/history/scan.md", content: scanTable(r.domains, opts, localToday()), mode: "replace" }, "Mail scan");
         return text(scanReport(r, opts.top));
       }),
   );
@@ -453,6 +459,135 @@ export function buildServer(deps: ServerDeps, version: string): McpServer {
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
     ({ include_unconfirmed, max_results, ...target }) => guarded(async () => text(findSimilar(deps.memory.dir, target, include_unconfirmed, max_results))),
+  );
+
+  const pipeline = async () => {
+    const p = await deps.loadPipeline();
+    if (!p) throw new Error("No deals sheet set. Add `- deals sheet: <link>` to config.md in the data folder.");
+    if (p.deals.length === 0) throw new Error(`No deals found in the deals sheet. ${p.warnings.join(" ")} You can name the columns with 'deals columns' in config.md.`);
+    return { ...p, deals: withHarnessProbabilities(deps.memory.dir, p.deals) };
+  };
+  const today = () => localToday();
+  const change = z.object({
+    account: z.string().min(1),
+    probability: z.number().min(0).max(100).optional().describe("New win probability in percent"),
+    value: z.number().nonnegative().optional(),
+    close: date.optional().describe("New close date"),
+    status: z.enum(["won", "lost"]).optional(),
+  });
+
+  server.registerTool(
+    "pipeline_read",
+    {
+      title: "Read the pipeline",
+      description: "Read open and closed deals from the deals Sheet (any layout): account, value, currency, stage, close date, the Sheet's probability, and the harness's latest probability.",
+      inputSchema: {},
+      annotations: { readOnlyHint: true, openWorldHint: true },
+    },
+    () =>
+      guarded(async () => {
+        const { deals, warnings } = await pipeline();
+        const rows = deals.map(
+          (d) =>
+            `| ${d.account} | ${d.value ?? "-"} ${d.currency.join("/")} | ${d.stage || "-"} | ${d.status} | ${d.close ?? "-"} | ${d.sheetProbability !== undefined ? `${Math.round(d.sheetProbability * 100)}%` : "-"} | ${d.harnessProbability !== undefined ? `${Math.round(d.harnessProbability * 100)}%` : "-"} |`,
+        );
+        const table = ["| Account | Value | Stage | Status | Close | Sheet % | Harness % |", "|---|---|---|---|---|---|---|", ...rows].join("\n");
+        return text(dataBlock("sheets/deals", `${table}${warnings.length ? `\n\n${warnings.join("\n")}` : ""}`));
+      }),
+  );
+
+  server.registerTool(
+    "deal_prior",
+    {
+      title: "Base rate for a deal",
+      description: "The base win rate for a deal like this one, from confirmed past deals in the same industry and size (pulled toward the overall rate when there are few). Start every probability from this.",
+      inputSchema: { account: z.string().min(1) },
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
+    ({ account }) => guarded(async () => text(dealPrior(deps.memory.dir, account))),
+  );
+
+  server.registerTool(
+    "probability_set",
+    {
+      title: "Log a win probability",
+      description:
+        "Record the harness's win probability for an open deal today, with the reason. Append-only: past entries can't be changed, so calibration scores the real record. Call deal_prior first and explain any move away from the base rate with evidence.",
+      inputSchema: {
+        account: z.string().min(1),
+        percent: z.number().int().min(0).max(100),
+        why: z.string().min(10).max(400).describe("The evidence for moving off the base rate, pointing to signals"),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+    },
+    ({ account, percent, why }) => guarded(async () => text(await setProbability(deps.memory, account, percent, why))),
+  );
+
+  server.registerTool(
+    "forecast",
+    {
+      title: "Forecast a period",
+      description:
+        "Sum the pipeline for a period (like 2026-Q4, 2026-11 or 2026; default this quarter): won so far, expected (value times probability), likely (deals at 50% or more) and possible, per currency. Computed in code: quote these numbers, don't do your own arithmetic.",
+      inputSchema: { period: z.string().optional() },
+      annotations: { readOnlyHint: true, openWorldHint: true },
+    },
+    ({ period }) =>
+      guarded(async () => {
+        const { deals } = await pipeline();
+        return text(formatForecast(forecast(deals, parsePeriod(period, today()))));
+      }),
+  );
+
+  server.registerTool(
+    "scenario_model",
+    {
+      title: "Model a what-if",
+      description:
+        "Change some deals (probability, value, close date, won or lost) and see how the period's forecast moves, per currency, against the current forecast. Nothing is saved. Computed in code: quote these numbers.",
+      inputSchema: {
+        period: z.string().optional(),
+        name: z.string().optional().describe("A short name for the scenario"),
+        changes: z.array(change).min(1),
+      },
+      annotations: { readOnlyHint: true, openWorldHint: true },
+    },
+    ({ period, name, changes }) =>
+      guarded(async () => {
+        const { deals } = await pipeline();
+        const per = parsePeriod(period, today());
+        const r = scenario(deals, per, changes.map((c) => ({ ...c, ...(c.probability !== undefined ? { probability: c.probability / 100 } : {}) })));
+        const delta = Object.entries(r.delta).map(([c, d]) => `- ${c}: expected ${d.expected >= 0 ? "+" : ""}${d.expected} · likely ${d.likely >= 0 ? "+" : ""}${d.likely} · possible ${d.possible >= 0 ? "+" : ""}${d.possible} · won ${d.won >= 0 ? "+" : ""}${d.won}`);
+        return text(
+          [
+            `Scenario${name ? ` "${name}"` : ""} for ${per.label}.`,
+            r.unknown.length ? `Not in the pipeline (ignored): ${r.unknown.join(", ")}.` : "",
+            "",
+            "Change against the current forecast:",
+            ...(delta.length ? delta : ["- no change"]),
+            "",
+            "Current:",
+            formatForecast(r.base),
+            "",
+            "With these changes:",
+            formatForecast(r.after),
+          ]
+            .filter((l, i) => l !== "" || i > 0)
+            .join("\n"),
+        );
+      }),
+  );
+
+  server.registerTool(
+    "calibration_score",
+    {
+      title: "Score calibration",
+      description:
+        "How well probabilities match outcomes: a backtest of base rates on confirmed past deals, and the harness's own logged probabilities against confirmed outcomes. Brier score and a predicted-vs-actual table, computed in code. Saves memory/history/calibration.md.",
+      inputSchema: {},
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    () => guarded(async () => text(await calibrationScore(deps.memory))),
   );
 
   return server;

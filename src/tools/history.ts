@@ -1,5 +1,6 @@
 // Past deals: outcomes (unconfirmed until the user ticks them), ICP map, baseline, similar deals.
 
+import { localToday } from "../dates.js";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { baseline, icpMap, joinDeals, similarDeals, winRate, type Deal } from "../history/stats.js";
@@ -10,7 +11,7 @@ import { dataBlock } from "../server/data-block.js";
 import { accountSlug, memoryWrite, quoteProblem, type MemoryDeps } from "./memory.js";
 
 const OUTCOMES = "memory/history/outcomes.md";
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => localToday();
 const read = (dir: string, rel: string) => (existsSync(join(dir, rel)) ? readFileSync(join(dir, rel), "utf8") : "");
 
 export interface NewOutcome {

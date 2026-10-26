@@ -7,6 +7,11 @@ Shared settings. Put machine-specific values (file paths) in `config.local.md`, 
 - rate card range:
 - rate card columns:
 
+## Deals sheet (your pipeline: one row per deal)
+- deals sheet:
+- deals range:
+- deals columns:
+
 ## Limits
 - max discount: 10%
 

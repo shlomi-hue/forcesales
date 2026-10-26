@@ -56,9 +56,10 @@ I install the harness on my machine with one command, point it at my Gmail and a
 **Check:** hand-check 10 rebuilt deals against my memory of them; ICP map numbers match a manual count for one industry.
 
 ## Phase 6 — Judgment
+**Status:** built and unit-tested. The pipeline comes from a deals Sheet (`deals sheet` in config.md, any layout, dates read unambiguously). Probabilities start from a base rate computed from confirmed history and are logged append-only. `forecast`, `scenario_model` and `calibration_score` compute every number. The calibration report backtests on confirmed history and scores the harness's own logged forecasts. Live check pending (needs the deals Sheet).
 **Done when:** /rift gives scenarios and what-ifs with numbers computed in code, and /report shows how well its past probabilities matched outcomes.
 - /plan with pre-mortem against past loss reasons.
-- /rift, `scenario.model`, `probabilities.md`, `calibration.score`.
+- /rift, `scenario.model`, `probabilities.md`, `calibration.score`, `forecast.sum` (as `forecast`).
 - /report: forecast, calibration report, "what's working".
 **Check:** a what-if changes the quarter total by the amount a manual calculation gives; the calibration report runs on confirmed history.
 

@@ -6,7 +6,8 @@ export type Sheets = Pick<sheets_v4.Sheets, "spreadsheets">;
 const MAX_ROWS_PER_TAB = 2000;
 
 // Read one range, or every tab when no range is given. Cells come back as formatted text.
-export async function readTabs(sheets: Sheets, spreadsheetId: string, range?: string): Promise<SheetTab[]> {
+// raw: numbers and dates as numbers (dates as serial day counts), so "11/12" can't be misread.
+export async function readTabs(sheets: Sheets, spreadsheetId: string, range?: string, raw = false): Promise<SheetTab[]> {
   let ranges: string[];
   if (range) {
     ranges = [range];
@@ -17,7 +18,8 @@ export async function readTabs(sheets: Sheets, spreadsheetId: string, range?: st
   const res = await sheets.spreadsheets.values.batchGet({
     spreadsheetId,
     ranges,
-    valueRenderOption: "FORMATTED_VALUE",
+    valueRenderOption: raw ? "UNFORMATTED_VALUE" : "FORMATTED_VALUE",
+    ...(raw ? { dateTimeRenderOption: "SERIAL_NUMBER" } : {}),
     majorDimension: "ROWS",
   });
   return (res.data.valueRanges ?? []).map((vr, i) => ({

@@ -20,9 +20,10 @@ describe("MCP server", () => {
     const { client } = await connect();
     const names = (await client.listTools()).tools.map((t) => t.name).sort();
     expect(names).toEqual([
-      "calendar_read", "drive_read", "gmail_draft", "gmail_read", "history_stats", "mail_scan", "meeting_notes",
-      "memory_add_signal", "memory_list", "memory_read", "memory_search", "memory_write", "outcome_log", "pdf_export",
-      "promise_done", "promise_log", "promises_due", "sent_samples", "sheets_read", "similar_deals", "stakeholder_view",
+      "calendar_read", "calibration_score", "deal_prior", "drive_read", "forecast", "gmail_draft", "gmail_read", "history_stats",
+      "mail_scan", "meeting_notes", "memory_add_signal", "memory_list", "memory_read", "memory_search", "memory_write",
+      "outcome_log", "pdf_export", "pipeline_read", "probability_set", "promise_done", "promise_log", "promises_due",
+      "scenario_model", "sent_samples", "sheets_read", "similar_deals", "stakeholder_view",
     ]);
   });
 
@@ -93,5 +94,24 @@ describe("MCP server", () => {
     const r = await client.callTool({ name: "memory_write", arguments: { path: "company/playbook.md", content: "x" } });
     expect(r.isError).toBe(true);
     expect(textOf(r)).toContain("belongs to you");
+  });
+
+  it("forecasts and models a what-if from the deals sheet", async () => {
+    const deps = testDeps();
+    deps.loadPipeline = async () => ({
+      deals: [
+        { account: "Acme", value: 48000, currency: ["USD"], stage: "proposal", close: "2026-11-12", sheetProbability: 0.4, status: "open" as const, where: "x" },
+        { account: "Gamma", value: 30000, currency: ["USD"], stage: "proposal", close: "2026-12-15", sheetProbability: 0.7, status: "open" as const, where: "x" },
+      ],
+      warnings: [],
+    });
+    const server = buildServer(deps, "test");
+    const [a, b] = InMemoryTransport.createLinkedPair();
+    const client = new Client({ name: "test", version: "1" });
+    await Promise.all([server.connect(a), client.connect(b)]);
+    expect(textOf(await client.callTool({ name: "forecast", arguments: { period: "2026-Q4" } }))).toContain("- USD: won 0 · expected 40200 · likely (≥50%) 30000 · possible 78000");
+    const w = textOf(await client.callTool({ name: "scenario_model", arguments: { period: "2026-Q4", name: "Acme slips", changes: [{ account: "Acme", close: "2027-01-05" }] } }));
+    expect(w).toContain('Scenario "Acme slips" for 2026-Q4.');
+    expect(w).toContain("- USD: expected -19200 · likely +0 · possible -48000 · won +0");
   });
 });

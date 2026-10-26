@@ -1,12 +1,13 @@
 // Promises made on a deal, by the user ("us") or the buyer ("them"), with the quote that proves it.
 
+import { localToday } from "../dates.js";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { safePath } from "../data/folder.js";
 import { daysBetween, formatPromise, parsePromises, type ParsedPromise } from "../memory/promises.js";
 import { accountSlug, memoryWrite, type MemoryDeps, type WriteResult } from "./memory.js";
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => localToday();
 const fileFor = (account: string) => `memory/deals/${accountSlug(account)}/promises.md`;
 
 export interface NewPromise {

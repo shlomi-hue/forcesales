@@ -26,7 +26,10 @@ export const TOOL_ONLY: Record<string, string> = {
   "memory/history/outcomes.md": "outcome_log",
   "memory/history/baseline.md": "history_stats",
   "company/icp-map.md": "history_stats",
+  "memory/history/calibration.md": "calibration_score",
 };
+const TOOL_ONLY_PATTERNS: [RegExp, string][] = [[/^memory\/deals\/[^/]+\/probabilities\.md$/, "probability_set"]];
+const toolFor = (r: string) => TOOL_ONLY[r] ?? TOOL_ONLY_PATTERNS.find(([re]) => re.test(r))?.[1];
 
 // Create the folder from the template on first use. Returns true when it was just created.
 export async function ensureDataFolder(dir: string): Promise<boolean> {
@@ -53,7 +56,7 @@ export function safePath(dir: string, rel: string, opts: { write?: boolean; inte
   if (opts.write) {
     if (!r.endsWith(".md")) throw new Error("Memory files are markdown: the path must end in .md.");
     if (PROTECTED.includes(r)) throw new Error(`${r} belongs to you; the harness never changes it. Propose changes in memory/lessons/proposed.md.`);
-    const tool = TOOL_ONLY[r];
+    const tool = toolFor(r);
     if (tool && !opts.internal) throw new Error(`${r} is written only by ${tool}, so its contents can be trusted. Use that tool.`);
     if (!/^(memory|company)\//.test(r)) throw new Error("Writes go under memory/ or company/.");
   }

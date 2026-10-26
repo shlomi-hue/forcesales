@@ -28,6 +28,9 @@ export function loadConfig(dir: string, env: NodeJS.ProcessEnv = process.env): C
     DEAL_HARNESS_RATE_CARD_RANGE: file["rate card range"],
     DEAL_HARNESS_RATE_CARD_COLUMNS: file["rate card columns"],
     DEAL_HARNESS_MAX_DISCOUNT: file["max discount"],
+    DEAL_HARNESS_DEALS_SHEET: file["deals sheet"],
+    DEAL_HARNESS_DEALS_RANGE: file["deals range"],
+    DEAL_HARNESS_DEALS_COLUMNS: file["deals columns"],
     DEAL_HARNESS_BANNED_WORDS: undefined,
   };
   const merged: NodeJS.ProcessEnv = { ...fromFile };

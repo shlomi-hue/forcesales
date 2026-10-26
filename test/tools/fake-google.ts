@@ -101,6 +101,7 @@ export function testDeps(opts: { gmail?: Gmail; dir?: string } = {}): ServerDeps
     memory: { dir: opts.dir ?? tempDataDir(), sourceText: sourceReader(clients) },
     loadRateCard: async () => parseRateCard(simple),
     rules: async () => rules,
+    loadPipeline: async () => null,
     internalIds: ["RATECARD-SHEET-ID-123"],
   };
 }

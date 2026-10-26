@@ -6,11 +6,12 @@ const SKILLS = readdirSync("skills").filter((d) => !d.startsWith("."));
 const TOOLS = [
   "gmail_read", "gmail_draft", "sheets_read", "drive_read", "calendar_read", "meeting_notes", "memory_list", "memory_read",
   "memory_write", "memory_add_signal", "memory_search", "promise_log", "promise_done", "promises_due", "stakeholder_view", "pdf_export", "mail_scan", "sent_samples", "outcome_log", "history_stats", "similar_deals",
+  "pipeline_read", "deal_prior", "probability_set", "forecast", "scenario_model", "calibration_score",
 ];
 
 describe("skills", () => {
   it("ships the skills so far", () => {
-    expect(SKILLS.sort()).toEqual(["account", "company", "history", "nag", "prep", "proposal", "signals", "war"]);
+    expect(SKILLS.sort()).toEqual(["account", "company", "history", "nag", "plan", "prep", "proposal", "report", "rift", "signals", "war"]);
   });
 
   for (const name of SKILLS) {
@@ -30,7 +31,7 @@ describe("skills", () => {
       });
 
       it("only names tools that exist", () => {
-        const named = [...md.matchAll(/`([a-z]+_[a-z_]+)`/g)].map((m) => m[1]).filter((t) => /^(gmail|sheets|drive|calendar|memory)_/.test(t ?? ""));
+        const named = [...md.matchAll(/`([a-z]+(?:_[a-z]+)*)`/g)].map((m) => m[1]).filter((t) => /^(gmail|sheets|drive|calendar|memory|meeting|promise|promises|stakeholder|pdf|mail|sent|outcome|history|similar|pipeline|deal|probability|forecast|scenario|calibration)(_|$)/.test(t ?? ""));
         for (const t of named) expect(TOOLS, t).toContain(t);
       });
     });
