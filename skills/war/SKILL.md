@@ -33,9 +33,12 @@ The card is internal. It never goes in an email; `gmail_draft` refuses drafts th
    - **Wording in the RFP that looks written around them.** Flag it, and suggest a clarification question.
    - **Pricing posture** against them, without floors, margins or rate card numbers.
 5. **Save** with `memory_write`:
-   - `memory/deals/<account>/rfp-<competitor>.md`: this card.
+   - `memory/deals/<account>/rfp-<competitor>.md`: this card. Start it with `# Battle card: <account> RFP vs <competitor>`, then a bold one-line header (RFP name, due date). Keep the comparison as a markdown table with the columns above.
    - `company/battle-cards/<competitor>.md`: update the general card with anything new that holds beyond this RFP. Read it first, keep what's there, and add dated lines.
-6. Show the user the comparison table and the three biggest risks.
+6. **Make the PDF** with `pdf_export` on the card's path, with footer `Internal: do not share · <account> RFP vs <competitor>`. Verdict cells come out shaded: win green, lose red, tie yellow, unknown grey. Give the user the file path.
+7. Show the user the comparison table and the three biggest risks.
+
+The PDF is for the user's team. It stays on their computer; don't attach or paste it into an email.
 
 Never claim things about the competitor that a source doesn't back.
 

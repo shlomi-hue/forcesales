@@ -21,7 +21,7 @@ describe("MCP server", () => {
     const names = (await client.listTools()).tools.map((t) => t.name).sort();
     expect(names).toEqual([
       "calendar_read", "drive_read", "gmail_draft", "gmail_read", "meeting_notes", "memory_add_signal",
-      "memory_list", "memory_read", "memory_search", "memory_write", "promise_done", "promise_log",
+      "memory_list", "memory_read", "memory_search", "memory_write", "pdf_export", "promise_done", "promise_log",
       "promises_due", "sheets_read", "stakeholder_view",
     ]);
   });

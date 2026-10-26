@@ -8,6 +8,7 @@ import type { RateCard } from "../checks/rate-card.js";
 import { listEvents, readEvent, type Calendar } from "../tools/calendar.js";
 import { driveId, readDriveFile, searchDrive, type Drive } from "../tools/drive.js";
 import { createDraft, readThread, searchThreads, type Gmail } from "../tools/gmail.js";
+import { exportPdf } from "../tools/export.js";
 import { listMeetingsWithNotes, readMeetingNotes } from "../tools/meetings.js";
 import { completePromise, formatDue, logPromise, promisesDue } from "../tools/promises.js";
 import { stakeholderView } from "../tools/stakeholders.js";
@@ -336,6 +337,22 @@ export function buildServer(deps: ServerDeps, version: string): McpServer {
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
     ({ account, person }) => guarded(async () => text(stakeholderView(deps.memory, account, person))),
+  );
+
+  server.registerTool(
+    "pdf_export",
+    {
+      title: "Export a memory file as PDF",
+      description:
+        "Make a PDF from a markdown file in the data folder (headings, bullets, tables; win/lose/tie/unknown table cells are shaded). It's saved on this computer in <data>/exports/ and the path comes back. Nothing is sent or shared.",
+      inputSchema: {
+        path: z.string().min(1).describe("Markdown file, e.g. memory/deals/acme/rfp-globex.md"),
+        name: z.string().optional().describe("File name without .pdf; default from the path"),
+        footer: z.string().optional().describe("Footer on every page, e.g. 'Internal: do not share'"),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    (input) => guarded(async () => text(`PDF saved: ${await exportPdf(deps.memory.dir, input)}`)),
   );
 
   return server;

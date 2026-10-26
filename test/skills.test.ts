@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const SKILLS = readdirSync("skills").filter((d) => !d.startsWith("."));
 const TOOLS = [
   "gmail_read", "gmail_draft", "sheets_read", "drive_read", "calendar_read", "meeting_notes", "memory_list", "memory_read",
-  "memory_write", "memory_add_signal", "memory_search", "promise_log", "promise_done", "promises_due", "stakeholder_view",
+  "memory_write", "memory_add_signal", "memory_search", "promise_log", "promise_done", "promises_due", "stakeholder_view", "pdf_export",
 ];
 
 describe("skills", () => {
