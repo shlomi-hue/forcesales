@@ -47,7 +47,8 @@ I install the harness on my machine with one command, point it at my Gmail and a
 **Status:** built and unit-tested; the injection eval now covers poisoned meeting notes too. Live check pending, including one real `deal-harness run prep`.
 
 ## Phase 5 — History scan and ICP map
-**Done when:** /history has scanned my past 2 to 3 years of mail and shows rebuilt deals, inferred outcomes for me to confirm, an ICP map and a calibration baseline.
+**Status:** built and unit-tested. `mail_scan` reads only threads I wrote in, groups them by outside company, leaves out free-mail, newsletters and automated senders, and caches. Outcomes are written unconfirmed by `outcome_log` only; I confirm with `deal-harness confirm` or by ticking them. `history_stats` computes the ICP map and baseline in code from confirmed outcomes. Live check (hand-check 10 deals, one industry count) pending.
+**Done when:** /history has scanned my past mail (it asks how far back; 12 months by default) and shows rebuilt deals, inferred outcomes for me to confirm, an ICP map and a calibration baseline.
 - `mail.scan` within the scope in config.md, grouped by external company domain; personal mail excluded.
 - /history: find, rebuild and judge each past deal; `history/<account>.md` with what worked and what went wrong, each with a quote.
 - `outcome.log`, `similar.deals`, `icp-map.md` (cells under 5 deals say "too few"), calibration baseline, voice seeding from sent mail.
@@ -83,6 +84,6 @@ I install the harness on my machine with one command, point it at my Gmail and a
 - Rate card Sheet layout: ask me for the Sheet before Phase 1's `pricing.check`.
 - Embedding model: dropped for now; full-text search only (2026-10-25).
 - Transcripts: not used; meetings come from Gemini notes (2026-10-25).
-- Email scan scope (start date, labels, domains to exclude): ask at Phase 5.
+- Email scan scope: /history asks the user each time; default 12 months, excludes from config.md (2026-10-26).
 - Exact config paths for Codex and Gemini CLI: check their current docs at Phase 9.
 - Keychain library: propose one and ask before adding it in Phase 1.

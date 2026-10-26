@@ -21,6 +21,13 @@ export function dataDir(env: NodeJS.ProcessEnv = process.env): string {
 // Files the harness reads but never writes: its rules belong to the user.
 export const PROTECTED = ["memory/lessons/accepted.md", "company/playbook.md", "config.md", "config.local.md"];
 
+// Files only harness code writes: outcomes (so only the user can confirm them) and numbers computed in code.
+export const TOOL_ONLY: Record<string, string> = {
+  "memory/history/outcomes.md": "outcome_log",
+  "memory/history/baseline.md": "history_stats",
+  "company/icp-map.md": "history_stats",
+};
+
 // Create the folder from the template on first use. Returns true when it was just created.
 export async function ensureDataFolder(dir: string): Promise<boolean> {
   if (existsSync(join(dir, "config.md"))) return false;
@@ -35,7 +42,7 @@ export async function ensureDataFolder(dir: string): Promise<boolean> {
 }
 
 // Resolve a path the agent gave, relative to the data folder. Refuses anything outside it.
-export function safePath(dir: string, rel: string, opts: { write?: boolean } = {}): { abs: string; rel: string } {
+export function safePath(dir: string, rel: string, opts: { write?: boolean; internal?: boolean } = {}): { abs: string; rel: string } {
   const cleaned = normalize(rel.trim().replace(/\\/g, "/")).replace(/^(\.\/)+/, "");
   if (!cleaned || isAbsolute(cleaned)) throw new Error(`Give a path inside the data folder, like memory/accounts/acme.md (got "${rel}").`);
   const abs = resolve(dir, cleaned);
@@ -46,6 +53,8 @@ export function safePath(dir: string, rel: string, opts: { write?: boolean } = {
   if (opts.write) {
     if (!r.endsWith(".md")) throw new Error("Memory files are markdown: the path must end in .md.");
     if (PROTECTED.includes(r)) throw new Error(`${r} belongs to you; the harness never changes it. Propose changes in memory/lessons/proposed.md.`);
+    const tool = TOOL_ONLY[r];
+    if (tool && !opts.internal) throw new Error(`${r} is written only by ${tool}, so its contents can be trusted. Use that tool.`);
     if (!/^(memory|company)\//.test(r)) throw new Error("Writes go under memory/ or company/.");
   }
   return { abs, rel: r };

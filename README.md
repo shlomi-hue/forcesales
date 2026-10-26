@@ -28,6 +28,12 @@ A sales agent harness that runs inside Claude Code (and later Claude Desktop, Co
 | `memory_search` | Full-text search over memory |
 | `meeting_notes` | A meeting's Gemini notes ("Notes by Gemini" Doc), or a list of recent meetings |
 | `promise_log` / `promise_done` / `promises_due` | Commitments on a deal, ours and theirs, quote-checked; late ones with days late |
+| `mail_scan` | Past mail you wrote in, grouped by outside company (cached) |
+| `sent_samples` | Your own sent emails, quoted replies cut, to learn your voice |
+| `outcome_log` | A past deal's outcome with its evidence, always unconfirmed |
+| `history_stats` | ICP map and calibration baseline, computed from confirmed outcomes |
+| `similar_deals` | Past deals most like a given one, with what worked and went wrong |
+| `pdf_export` | A memory file as a PDF in `<data>/exports/` |
 | `stakeholder_view` | One person's role, words and promises, nothing else (for /prep's rehearsal) |
 
 Everything from outside (mail, files, events, memory) comes back inside an `OUTSIDE_DATA` block. MCP tool names use `_` rather than `.`, because Claude's tool-name rules don't allow dots.
@@ -51,8 +57,13 @@ A draft is created only if all of these pass. Otherwise you get every reason bac
 - `/signals`: capture signals and promises from a thread, a file or a meeting's Gemini notes.
 - `/nag`: what's late, and nudge drafts.
 - `/proposal`: a checked pricing or proposal draft, with a deslop pass.
-- `/war`: an RFP battle card against one competitor.
+- `/war`: an RFP battle card against one competitor, exported as a PDF.
+- `/history`: rebuild past deals from mail; ICP map and baseline from the outcomes you confirm.
 - `/prep`: a meeting brief with a stakeholder-by-stakeholder rehearsal.
+
+## Confirming past outcomes
+
+/history guesses how each past deal ended and saves it unconfirmed in `memory/history/outcomes.md`. Run `node dist/cli/index.js confirm` to go through them (y = right, w/l/n = it was won/lost/no decision, d = not a deal), or tick `[x]` by hand. The agent can't confirm outcomes, and unconfirmed ones never count in the ICP map, calibration or lessons.
 
 ## Scheduled runs
 

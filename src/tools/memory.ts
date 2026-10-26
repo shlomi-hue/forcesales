@@ -59,9 +59,11 @@ export async function memoryWrite(
   deps: MemoryDeps,
   input: { path: string; content: string; mode: "replace" | "append" },
   message?: string,
+  // Harness code writing a file the agent can't (see TOOL_ONLY).
+  internal = false,
 ): Promise<WriteResult> {
   const notes = await prepare(deps);
-  const { abs, rel } = safePath(deps.dir, input.path, { write: true });
+  const { abs, rel } = safePath(deps.dir, input.path, { write: true, internal });
   const created = !existsSync(abs);
   const prev = created ? "" : readFileSync(abs, "utf8");
   let next = input.mode === "append" && prev ? `${prev.replace(/\n*$/, "\n")}${input.content.replace(/^\n+/, "")}` : input.content;

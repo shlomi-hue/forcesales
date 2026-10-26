@@ -9,6 +9,8 @@ import { listEvents, readEvent, type Calendar } from "../tools/calendar.js";
 import { driveId, readDriveFile, searchDrive, type Drive } from "../tools/drive.js";
 import { createDraft, readThread, searchThreads, type Gmail } from "../tools/gmail.js";
 import { exportPdf } from "../tools/export.js";
+import { findSimilar, historyStats, logOutcome, scanDefaults } from "../tools/history.js";
+import { scanMail, scanReport, scanTable, sentSamples } from "../tools/scan.js";
 import { listMeetingsWithNotes, readMeetingNotes } from "../tools/meetings.js";
 import { completePromise, formatDue, logPromise, promisesDue } from "../tools/promises.js";
 import { stakeholderView } from "../tools/stakeholders.js";
@@ -353,6 +355,104 @@ export function buildServer(deps: ServerDeps, version: string): McpServer {
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
     (input) => guarded(async () => text(`PDF saved: ${await exportPdf(deps.memory.dir, input)}`)),
+  );
+
+  server.registerTool(
+    "mail_scan",
+    {
+      title: "Scan past mail by company",
+      description:
+        "Group the user's past email by the outside company it was with, to find past deals. Counts only threads the user wrote in; leaves out personal (free-mail) addresses, newsletters and automated senders. Ask the user how far back to go first (usually 12 months). Saves a summary to memory/history/scan.md and returns the top companies with contacts, subjects and thread ids. Can take a few minutes the first time.",
+      inputSchema: {
+        months: z.number().int().min(1).max(60).optional().describe("How far back; default from config.md, else 12"),
+        exclude_domains: z.array(z.string()).optional().describe("Company domains to leave out (vendors, investors, your other businesses)"),
+        exclude_labels: z.array(z.string()).optional().describe("Gmail labels to leave out"),
+        max_threads: z.number().int().min(10).max(20000).default(5000),
+        top: z.number().int().min(1).max(500).default(60).describe("How many companies to return in detail"),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+    },
+    (input) =>
+      guarded(async () => {
+        const dir = deps.memory.dir;
+        const d = scanDefaults(dir);
+        const opts = {
+          months: input.months ?? d.months,
+          excludeDomains: input.exclude_domains ?? d.excludeDomains,
+          excludeLabels: input.exclude_labels ?? d.excludeLabels,
+          maxThreads: input.max_threads,
+          top: input.top,
+        };
+        const r = await scanMail(deps.gmail(), dir, opts);
+        await memoryWrite(deps.memory, { path: "memory/history/scan.md", content: scanTable(r.domains, opts, new Date().toISOString().slice(0, 10)), mode: "replace" }, "Mail scan");
+        return text(scanReport(r, opts.top));
+      }),
+  );
+
+  server.registerTool(
+    "sent_samples",
+    {
+      title: "Samples of the user's sent email",
+      description: "The user's own recent emails to outside companies, quoted replies removed, to learn how they write (for company/voice.md). Returns an OUTSIDE_DATA block.",
+      inputSchema: { months: z.number().int().min(1).max(36).default(6), count: z.number().int().min(1).max(60).default(25) },
+      annotations: { readOnlyHint: true, openWorldHint: true },
+    },
+    ({ months, count }) => guarded(async () => text(await sentSamples(deps.gmail(), months, count))),
+  );
+
+  server.registerTool(
+    "outcome_log",
+    {
+      title: "Log a past deal's outcome",
+      description:
+        "Record how a past deal ended (won, lost, no-decision, or still open), with the exact words that show it and their source. It's saved as NOT confirmed: only the user can confirm it, by ticking it in memory/history/outcomes.md or running `deal-harness confirm`. Unconfirmed outcomes never count in the ICP map or calibration.",
+      inputSchema: {
+        account: z.string().min(1),
+        outcome: z.enum(["won", "lost", "no-decision", "open"]),
+        closed: date.optional().describe("When it closed, YYYY-MM-DD"),
+        value: z.number().positive().optional().describe("Deal value, as quoted in the mail"),
+        currency: z.string().length(3).optional(),
+        reason: z.string().max(160).optional().describe("Why, in a few words, e.g. 'chose Globex on price'"),
+        evidence: z.string().min(3).describe("Exact words that show the outcome"),
+        source,
+      },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    (input) => guarded(async () => text(await logOutcome(deps.memory, input))),
+  );
+
+  server.registerTool(
+    "history_stats",
+    {
+      title: "Rebuild ICP map and baseline",
+      description:
+        "Recompute company/icp-map.md (win rates by industry, size, region, competitor; cells under 5 deals say 'too few') and memory/history/baseline.md (base win rate, cycle length, deal size, loss reasons) from confirmed outcomes only. The numbers come from code.",
+      inputSchema: {},
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    () => guarded(async () => text(await historyStats(deps.memory))),
+  );
+
+  server.registerTool(
+    "similar_deals",
+    {
+      title: "Similar past deals",
+      description:
+        "Past deals most like a given one (same industry, competitor, size, region, similar value), with how they ended and what worked or went wrong. Give an account to use its file's details, or the details directly. Confirmed outcomes only unless include_unconfirmed.",
+      inputSchema: {
+        account: z.string().optional(),
+        industry: z.string().optional(),
+        size: z.string().optional(),
+        region: z.string().optional(),
+        competitor: z.string().optional(),
+        value: z.number().positive().optional(),
+        currency: z.string().length(3).optional(),
+        include_unconfirmed: z.boolean().default(false),
+        max_results: z.number().int().min(1).max(20).default(5),
+      },
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
+    ({ include_unconfirmed, max_results, ...target }) => guarded(async () => text(findSimilar(deps.memory.dir, target, include_unconfirmed, max_results))),
   );
 
   return server;

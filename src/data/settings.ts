@@ -46,21 +46,25 @@ export function neverSay(voiceMd: string): string[] {
     .filter(Boolean);
 }
 
-// Each account file: "# Name" title and a "domains: a.com, b.com" line.
+// Each account and past-deal file: "# Name" title and a "domains: a.com, b.com" line.
 export function knownAccounts(dir: string): OtherAccount[] {
-  const accountsDir = join(dir, "memory", "accounts");
-  if (!existsSync(accountsDir)) return [];
-  return readdirSync(accountsDir)
-    .filter((f) => f.endsWith(".md"))
-    .map((f) => {
-      const md = readFileSync(join(accountsDir, f), "utf8");
+  const skip = new Set(["outcomes.md", "baseline.md", "scan.md"]);
+  const seen = new Map<string, OtherAccount>();
+  for (const sub of ["accounts", "history"]) {
+    const folder = join(dir, "memory", sub);
+    if (!existsSync(folder)) continue;
+    for (const f of readdirSync(folder).filter((x) => x.endsWith(".md") && !skip.has(x))) {
+      const md = readFileSync(join(folder, f), "utf8");
       const name = md.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? f.replace(/\.md$/, "");
       const domains = (md.match(/^\s*[-*]?\s*domains?:\s*(.+)$/im)?.[1] ?? "")
         .split(/[,\s]+/)
         .map((d) => d.trim().toLowerCase().replace(/^@/, ""))
         .filter((d) => d.includes("."));
-      return { name, domains };
-    });
+      const prev = seen.get(name.toLowerCase());
+      seen.set(name.toLowerCase(), { name, domains: [...new Set([...(prev?.domains ?? []), ...domains])] });
+    }
+  }
+  return [...seen.values()];
 }
 
 export function loadRules(dir: string, config: Config): CheckRules {

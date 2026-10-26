@@ -14,7 +14,7 @@ You're building the files the other skills rely on. Ask the user short questions
 3. Fill each file with `memory_write` (mode `replace`), keeping its headings:
    - `company/business-model.md`: what they sell, how it's priced and billed, typical deal size and cycle, who signs.
    - `company/icp.md`: industries, company size, buyer roles, good-fit and bad-fit signs.
-   - `company/voice.md`: tone, habits, and a **Never say** list, one phrase per bullet. Drafts using those phrases are refused, so ask the user for phrases they hate.
+   - `company/voice.md`: tone, habits, and a **Never say** list, one phrase per bullet. Drafts using those phrases are refused, so ask the user for phrases they hate. To learn their tone, read `sent_samples` and describe how they actually write.
    - `company/brand.md`: how to write names, and claims they can and can't make.
    - `company/rate-cards.md`: pricing rules that aren't in the rate card Sheet (approval needs, bundles, terms).
    - `company/battle-cards/<competitor>.md`: one per competitor the user names: their strengths, their weak spots, how we win, proof.

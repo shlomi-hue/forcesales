@@ -13,6 +13,11 @@ Shared settings. Put machine-specific values (file paths) in `config.local.md`, 
 ## Google
 - oauth client:
 
+## Mail history scan
+- scan months: 12
+- scan exclude domains:
+- scan exclude labels:
+
 ## Schedule
 - prep time: 18:00
 - nag time: 08:00
