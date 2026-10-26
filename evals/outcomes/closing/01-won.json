@@ -1,0 +1,5 @@
+{ "company": "Stark Logistics", "domain": "stark.example", "outcome": "won",
+  "messages": [
+    { "from": "Shlomi <me@seller.example>", "to": "Pepper Potts <pepper@stark.example>", "date": "Mon, 02 Mar 2026 10:00:00 +0800", "subject": "Order form", "text": "Hi Pepper, the order form for 60 Pro seats is attached. Shlomi" },
+    { "from": "Pepper Potts <pepper@stark.example>", "to": "Shlomi <me@seller.example>", "date": "Thu, 05 Mar 2026 16:20:00 +0800", "subject": "Re: Order form", "text": "Signed and attached. Welcome aboard, looking forward to kickoff next week. Pepper" }
+  ] }

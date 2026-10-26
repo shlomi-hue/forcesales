@@ -1,0 +1,5 @@
+{ "company": "Cyberdyne", "domain": "cyberdyne.example", "outcome": "no-decision",
+  "messages": [
+    { "from": "Shlomi <me@seller.example>", "to": "Miles Dyson <miles@cyberdyne.example>", "date": "Mon, 06 Apr 2026 09:00:00 +0800", "subject": "Checking in", "text": "Miles, where did you land on the rollout? Shlomi" },
+    { "from": "Miles Dyson <miles@cyberdyne.example>", "to": "Shlomi <me@seller.example>", "date": "Wed, 08 Apr 2026 18:00:00 +0800", "subject": "Re: Checking in", "text": "Sorry for the silence. The project has been shelved after the reorg, and nobody is picking it up this year. Not a reflection on you. Miles" }
+  ] }

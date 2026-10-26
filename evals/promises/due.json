@@ -1,0 +1,17 @@
+{
+  "about": "Open and kept promises across three deals, checked on 2026-10-26 with 2 days' look-ahead. Days late worked out by hand.",
+  "asOf": "2026-10-26",
+  "ahead": 2,
+  "promises": [
+    { "account": "acme", "done": false, "due": "2026-10-16", "owner": "them", "who": "Dana Lee", "what": "send the security questionnaire" },
+    { "account": "acme", "done": false, "due": "2026-10-25", "owner": "us", "who": "Shlomi", "what": "send the case study" },
+    { "account": "acme", "done": true, "due": "2026-10-01", "owner": "us", "who": "Shlomi", "what": "send pricing" },
+    { "account": "initech", "done": false, "due": "2026-10-27", "owner": "them", "who": "Bill Lumbergh", "what": "confirm procurement steps" },
+    { "account": "initech", "done": false, "due": "2026-10-28", "owner": "us", "who": "Shlomi", "what": "send the DPA" },
+    { "account": "initech", "done": false, "due": "2026-10-29", "owner": "us", "who": "Shlomi", "what": "book the onboarding call" },
+    { "account": "hooli", "done": false, "due": "2026-10-26", "owner": "them", "who": "Jared", "what": "send the signed order form" },
+    { "account": "hooli", "done": false, "due": "2026-09-30", "owner": "us", "who": "Shlomi", "what": "send kickoff notes" }
+  ],
+  "late": [["hooli", "send kickoff notes", 26], ["acme", "send the security questionnaire", 10], ["acme", "send the case study", 1]],
+  "soon": [["hooli", "send the signed order form"], ["initech", "confirm procurement steps"], ["initech", "send the DPA"]]
+}

@@ -5,3 +5,4 @@ dist/
 config.local.md
 index.sqlite
 .mcp.json
+evals/results/

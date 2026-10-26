@@ -1,0 +1,51 @@
+{
+ "about": "8 drafts and what the user sent. Planted: one phrase cut in 4 drafts, one phrase replaced the same way in 3, a sign-off changed in 3. Noise: a phrase cut in only 2 drafts, prices and dates changed in 3+, one-off rewrites, one draft sent unchanged.",
+ "pairs": [
+  {
+   "account": "acme.example",
+   "draft": "Hi Dana,\n\nI hope this finds you well. Pro is $55 per seat per month for 40 seats.\n\nLet me know if you have any questions.\n\nBest regards,\nShlomi",
+   "sent": "Hi Dana,\n\nPro is $58 per seat per month for 40 seats.\n\nDoes Thursday work for a call?\n\nThanks,\nShlomi"
+  },
+  {
+   "account": "initech.example",
+   "draft": "Hi Bill,\n\nI hope this finds you well. Attached is the security pack you asked for.\n\nLet me know if you have any questions.\n\nBest regards,\nShlomi",
+   "sent": "Hi Bill,\n\nAttached is the security pack you asked for.\n\nDoes Thursday work for a call?\n\nThanks,\nShlomi"
+  },
+  {
+   "account": "umbrella.example",
+   "draft": "Hi Alice,\n\nI hope this finds you well. The DPA is attached, and onboarding is $2,000 per site.\n\nLet me know if you have any questions.\n\nBest regards,\nShlomi",
+   "sent": "Hi Alice,\n\nThe DPA is attached, and onboarding is $1,900 per site.\n\nDoes Thursday work for a call?\n\nThanks,\nShlomi"
+  },
+  {
+   "account": "hooli.example",
+   "draft": "Hi Gavin,\n\nI hope this finds you well. Thanks for confirming the renewal.\n\nJust checking in on the order form from Jared.\n\nShlomi",
+   "sent": "Hi Gavin,\n\nThanks for confirming the renewal.\n\nCould Jared send the order form this week?\n\nShlomi"
+  },
+  {
+   "account": "stark.example",
+   "draft": "Hi Pepper,\n\nJust checking in on the pilot dates. Pro is $55 per seat.\n\nShlomi",
+   "sent": "Hi Pepper,\n\nCan we lock the pilot dates? Pro is $57 per seat.\n\nShlomi"
+  },
+  {
+   "account": "wayne.example",
+   "draft": "Hi Lucius,\n\nHere is the proposal for 120 seats. We are a great fit for your team.\n\nShlomi",
+   "sent": "Hi Lucius,\n\nHere is the proposal for 120 seats. Three logistics teams your size run on it today.\n\nShlomi"
+  },
+  {
+   "account": "cyberdyne.example",
+   "draft": "Hi Miles,\n\nFollowing our call, the rollout plan is attached. Kickoff could be 3 November.\n\nShlomi",
+   "sent": "Hi Miles,\n\nFollowing our call, the rollout plan is attached. Kickoff could be 10 November.\n\nShlomi"
+  },
+  {
+   "account": "soylent.example",
+   "draft": "Hi Sol,\n\nThe pilot terms are attached for legal.\n\nShlomi",
+   "sent": "Hi Sol,\n\nThe pilot terms are attached for legal.\n\nShlomi"
+  }
+ ],
+ "expected": [
+  "Never write \"I hope this finds you well\"",
+  "Write \"Does Thursday work for a call\" instead of \"Let me know if you have any questions\"",
+  "Write \"Thanks\" instead of \"Best regards\""
+ ],
+ "unchanged": 1
+}

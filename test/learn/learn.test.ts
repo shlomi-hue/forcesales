@@ -250,3 +250,12 @@ describe("word diff merging", () => {
     ]);
   });
 });
+
+describe("word diff across lines", () => {
+  it("keeps edits on neighbouring lines apart", () => {
+    expect(wordDiff("Any questions?\n\nBest regards,\nShlomi", "Does Thursday work?\n\nThanks,\nShlomi")).toEqual([
+      { removed: "Any questions?", added: "Does Thursday work?" },
+      { removed: "Best regards,", added: "Thanks," },
+    ]);
+  });
+});

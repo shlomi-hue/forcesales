@@ -1,0 +1,230 @@
+{
+ "about": "24 confirmed past deals and 1 unconfirmed, by hand. Logistics wins most; retail mostly loses on budget.",
+ "deals": [
+  {
+   "account": "a01",
+   "industry": "logistics",
+   "size": "mid",
+   "closed": "2025-01-15",
+   "outcome": "won",
+   "confirmed": true
+  },
+  {
+   "account": "a02",
+   "industry": "logistics",
+   "size": "mid",
+   "closed": "2025-02-10",
+   "outcome": "won",
+   "confirmed": true
+  },
+  {
+   "account": "a03",
+   "industry": "logistics",
+   "size": "small",
+   "closed": "2025-02-20",
+   "outcome": "lost",
+   "confirmed": true,
+   "competitor": "Globex",
+   "reason": "chose Globex on price"
+  },
+  {
+   "account": "a04",
+   "industry": "retail",
+   "size": "mid",
+   "closed": "2025-03-05",
+   "outcome": "lost",
+   "confirmed": true,
+   "competitor": "Globex",
+   "reason": "no budget"
+  },
+  {
+   "account": "a05",
+   "industry": "retail",
+   "size": "small",
+   "closed": "2025-03-20",
+   "outcome": "lost",
+   "confirmed": true,
+   "reason": "no budget"
+  },
+  {
+   "account": "a06",
+   "industry": "fintech",
+   "size": "mid",
+   "closed": "2025-04-02",
+   "outcome": "won",
+   "confirmed": true
+  },
+  {
+   "account": "a07",
+   "industry": "logistics",
+   "size": "mid",
+   "closed": "2025-04-18",
+   "outcome": "won",
+   "confirmed": true
+  },
+  {
+   "account": "a08",
+   "industry": "retail",
+   "size": "mid",
+   "closed": "2025-05-01",
+   "outcome": "no-decision",
+   "confirmed": true,
+   "reason": "no budget"
+  },
+  {
+   "account": "a09",
+   "industry": "logistics",
+   "size": "small",
+   "closed": "2025-05-20",
+   "outcome": "won",
+   "confirmed": true
+  },
+  {
+   "account": "a10",
+   "industry": "fintech",
+   "size": "small",
+   "closed": "2025-06-03",
+   "outcome": "lost",
+   "confirmed": true,
+   "competitor": "Globex",
+   "reason": "chose Globex on price"
+  },
+  {
+   "account": "a11",
+   "industry": "retail",
+   "size": "small",
+   "closed": "2025-06-21",
+   "outcome": "lost",
+   "confirmed": true,
+   "reason": "no budget"
+  },
+  {
+   "account": "a12",
+   "industry": "logistics",
+   "size": "mid",
+   "closed": "2025-07-07",
+   "outcome": "won",
+   "confirmed": true
+  },
+  {
+   "account": "a13",
+   "industry": "fintech",
+   "size": "mid",
+   "closed": "2025-07-25",
+   "outcome": "won",
+   "confirmed": true
+  },
+  {
+   "account": "a14",
+   "industry": "retail",
+   "size": "mid",
+   "closed": "2025-08-12",
+   "outcome": "lost",
+   "confirmed": true,
+   "competitor": "Globex",
+   "reason": "chose Globex on price"
+  },
+  {
+   "account": "a15",
+   "industry": "logistics",
+   "size": "mid",
+   "closed": "2025-08-30",
+   "outcome": "lost",
+   "confirmed": true,
+   "competitor": "Globex",
+   "reason": "chose Globex on price"
+  },
+  {
+   "account": "a16",
+   "industry": "logistics",
+   "size": "small",
+   "closed": "2025-09-15",
+   "outcome": "won",
+   "confirmed": true
+  },
+  {
+   "account": "a17",
+   "industry": "retail",
+   "size": "small",
+   "closed": "2025-10-01",
+   "outcome": "no-decision",
+   "confirmed": true,
+   "reason": "no budget"
+  },
+  {
+   "account": "a18",
+   "industry": "fintech",
+   "size": "mid",
+   "closed": "2025-10-20",
+   "outcome": "lost",
+   "confirmed": true,
+   "reason": "security review failed"
+  },
+  {
+   "account": "a19",
+   "industry": "logistics",
+   "size": "mid",
+   "closed": "2025-11-05",
+   "outcome": "won",
+   "confirmed": true
+  },
+  {
+   "account": "a20",
+   "industry": "retail",
+   "size": "mid",
+   "closed": "2025-11-25",
+   "outcome": "won",
+   "confirmed": true
+  },
+  {
+   "account": "a21",
+   "industry": "logistics",
+   "size": "small",
+   "closed": "2025-12-10",
+   "outcome": "won",
+   "confirmed": true
+  },
+  {
+   "account": "a22",
+   "industry": "fintech",
+   "size": "small",
+   "closed": "2026-01-08",
+   "outcome": "lost",
+   "confirmed": true,
+   "competitor": "Globex",
+   "reason": "chose Globex on price"
+  },
+  {
+   "account": "a23",
+   "industry": "retail",
+   "size": "small",
+   "closed": "2026-01-30",
+   "outcome": "lost",
+   "confirmed": true,
+   "reason": "no budget"
+  },
+  {
+   "account": "a24",
+   "industry": "logistics",
+   "size": "mid",
+   "closed": "2026-02-20",
+   "outcome": "won",
+   "confirmed": true
+  },
+  {
+   "account": "a25",
+   "industry": "logistics",
+   "size": "mid",
+   "closed": "2026-03-01",
+   "outcome": "lost",
+   "confirmed": false,
+   "reason": "no budget",
+   "competitor": "Globex"
+  }
+ ],
+ "icp": {
+  "logistics, all sizes": "9/11 won (82%)",
+  "retail, all sizes": "1/8 won (13%)",
+  "Globex": "0/6 won (0%)"
+ }
+}

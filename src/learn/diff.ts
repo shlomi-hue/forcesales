@@ -11,6 +11,12 @@ const MAX_WORDS = 1500;
 
 const words = (s: string) => s.split(/\s+/).filter(Boolean);
 
+// Line breaks are tokens too, so edits on neighbouring lines ("...any questions." then "Best
+// regards,") stay separate hunks. They never show up in a hunk's text.
+const BREAK = "\n";
+const tokens = (s: string) => s.replace(/\r/g, "").split(/[ \t]*(\n)[\s]*|[ \t]+/).filter((t): t is string => !!t);
+const text = (ts: string[]) => ts.filter((t) => t !== BREAK).join(" ");
+
 // Lower case, no outer punctuation or quotes, single spaces: how phrases are compared.
 export function normPhrase(s: string): string {
   return s
@@ -24,9 +30,9 @@ export function normPhrase(s: string): string {
 const key = (w: string) => normPhrase(w) || w;
 
 export function wordDiff(before: string, after: string): Hunk[] {
-  const a = words(before);
-  const b = words(after);
-  if (a.length > MAX_WORDS || b.length > MAX_WORDS) return a.join(" ") === b.join(" ") ? [] : [{ removed: a.join(" "), added: b.join(" ") }];
+  const a = tokens(before.trim());
+  const b = tokens(after.trim());
+  if (a.length > MAX_WORDS || b.length > MAX_WORDS) return text(a) === text(b) ? [] : [{ removed: text(a), added: text(b) }];
   const ka = a.map(key);
   const kb = b.map(key);
   // Longest common subsequence table, filled from the end.
@@ -44,8 +50,8 @@ export function wordDiff(before: string, after: string): Hunk[] {
   let rem: string[] = [];
   let add: string[] = [];
   const flush = () => {
-    if (rem.length || add.length) {
-      parts.push({ removed: rem.join(" "), added: add.join(" "), gap });
+    if (rem.some((t) => t !== BREAK) || add.some((t) => t !== BREAK)) {
+      parts.push({ removed: text(rem), added: text(add), gap });
       gap = [];
     }
     rem = [];
@@ -71,10 +77,10 @@ export function wordDiff(before: string, after: string): Hunk[] {
   const hunks: Hunk[] = [];
   for (const [n, p] of parts.entries()) {
     const prev = hunks.at(-1);
-    const ends = (w: string | undefined) => !!w && /[.!?:;]["')\]]*$/.test(w);
+    const ends = (w: string | undefined) => !!w && (w === BREAK || /[.!?:;]["')\]]*$/.test(w));
     const joinable = n > 0 && p.gap.length > 0 && p.gap.length <= 2 && !p.gap.some(ends) && !ends(prev?.removed.split(" ").at(-1)) && !ends(prev?.added.split(" ").at(-1));
     if (prev && joinable) {
-      const g = p.gap.join(" ");
+      const g = text(p.gap);
       prev.removed = [prev.removed, g, p.removed].filter(Boolean).join(" ");
       prev.added = [prev.added, g, p.added].filter(Boolean).join(" ");
     } else hunks.push({ removed: p.removed, added: p.added });

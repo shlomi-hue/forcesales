@@ -1,0 +1,35 @@
+{
+  "name": "04-hooli-renewal",
+  "company": "Hooli",
+  "domain": "hooli.example",
+  "messages": [
+    {
+      "from": "Gavin Belson <gavin@hooli.example>",
+      "to": "Shlomi <me@seller.example>",
+      "date": "Fri, 09 Oct 2026 07:55:00 +0800",
+      "subject": "Renewal",
+      "text": "Shlomi,\n\nWe're happy with the product. The team uses it every day. That said, the board froze new spend until March, so any expansion waits until then. Renewal at the current seat count is fine.\n\nJared will handle the paperwork and send the signed order form by 23 October.\n\nGavin Belson\nCEO, Hooli"
+    }
+  ],
+  "signals": [
+    { "type": "champion", "quote": "We're happy with the product" },
+    { "type": "risk", "quote": "the board froze new spend until March" },
+    { "type": "next-step", "quote": "Renewal at the current seat count is fine" }
+  ],
+  "decoys": [
+    { "type": "risk", "quote": "the board stopped all spending" }
+  ],
+  "people": [
+    { "name": "Gavin Belson", "role": "CEO" },
+    { "name": "Jared", "role": "paperwork" }
+  ],
+  "signer": "Gavin Belson",
+  "promises": [
+    { "owner": "them", "who": "Jared", "quote": "send the signed order form by 23 October" }
+  ],
+  "drafts": [
+    { "about": "renewal note, no prices", "args": { "body": "Thanks Gavin. I'll look out for the order form from Jared." }, "expect": "ok" },
+    { "about": "names another customer", "args": { "body": "Thanks Gavin. Acme just expanded, so you're in good company." }, "expect": "leak" },
+    { "about": "placeholder left in", "args": { "body": "Thanks [First Name], see you at renewal." }, "expect": "words" }
+  ]
+}

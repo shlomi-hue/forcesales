@@ -72,6 +72,7 @@ I install the harness on my machine with one command, point it at my Gmail and a
 **Check:** edit three drafts the same way and see one proposed rule; reject it and see it not applied.
 
 ## Phase 8 — Evals
+**Status:** done. `npm run eval` runs six sets and writes `evals/score.md`: threads (draft verdicts, quote checks, and with `EVAL_AGENT=1` a real Claude Code /account run scored on signals, people, roles, signer and promises), outcomes (replay in close order, ICP map hand count, agent outcome judging), calibration (Brier and forecast/what-if numbers worked out by hand), promises, edits (planted patterns vs noise), injection. Agent parts run Claude Code headless against the harness over local HTTP with recorded fixtures, in a temp folder that has only the shipped skills. The edits set found a diff bug (edits on neighbouring lines merged into one), now fixed.
 **Done when:** `npm run eval` scores all sets and writes `evals/score.md`.
 - Threads (signals, decision map, pricing), outcome replay, calibration, promises, edits, injection.
 **Check:** the full eval run completes and the scores look plausible to me.

@@ -1,0 +1,47 @@
+{
+  "name": "02-initech-stall",
+  "company": "Initech",
+  "domain": "initech.example",
+  "messages": [
+    {
+      "from": "Bill Lumbergh <bill@initech.example>",
+      "to": "Shlomi <me@seller.example>",
+      "date": "Tue, 06 Oct 2026 10:00:00 +0800",
+      "subject": "Enterprise quote",
+      "text": "Shlomi,\n\nI looked at the Enterprise quote. Honestly the price is a problem for us, it's well above what we pay for our current tool. Our procurement team will need three quotes before anything moves.\n\nI'll get you our security questionnaire by Friday 16 October.\n\nBill Lumbergh\nDirector of IT"
+    },
+    {
+      "from": "Peter Gibbons <peter@initech.example>",
+      "to": "Shlomi <me@seller.example>",
+      "cc": "Bill Lumbergh <bill@initech.example>",
+      "date": "Wed, 07 Oct 2026 08:45:00 +0800",
+      "subject": "Re: Enterprise quote",
+      "text": "Hi, Peter here, I run the support desk and would be the main user. My team wastes hours a day re-keying tickets between systems. I'd love to see this happen but Bill owns the budget.\n\nPeter"
+    }
+  ],
+  "signals": [
+    { "type": "objection", "quote": "the price is a problem for us" },
+    { "type": "process", "quote": "Our procurement team will need three quotes before anything moves" },
+    { "type": "pain", "quote": "My team wastes hours a day re-keying tickets between systems" },
+    { "type": "authority", "quote": "Bill owns the budget" },
+    { "type": "champion", "quote": "I'd love to see this happen" }
+  ],
+  "decoys": [
+    { "type": "objection", "quote": "the price is too high for us" },
+    { "type": "pain", "quote": "My team loses hours re-keying tickets" }
+  ],
+  "people": [
+    { "name": "Bill Lumbergh", "role": "Director of IT" },
+    { "name": "Peter Gibbons", "role": "support" }
+  ],
+  "signer": "Bill Lumbergh",
+  "promises": [
+    { "owner": "them", "who": "Bill Lumbergh", "quote": "I'll get you our security questionnaire by Friday 16 October" }
+  ],
+  "drafts": [
+    { "about": "Enterprise at 10% off", "args": { "body": "Bill, we can offer Enterprise at $108 per seat, 10% off list.", "prices": [{ "item": "Enterprise", "unit_price": 108 }], "discounts": [{ "item": "Enterprise", "percent": 10 }] }, "expect": "ok" },
+    { "about": "Enterprise at 30% off", "args": { "body": "Bill, we can offer Enterprise at 30% off.", "discounts": [{ "item": "Enterprise", "percent": 30 }] }, "expect": "discount" },
+    { "about": "undeclared discount", "args": { "body": "Bill, we'll take 12% off Enterprise for you.", "prices": [] }, "expect": "discount" },
+    { "about": "guarantee promise", "args": { "body": "Bill, we guarantee you'll cut re-keying time in half." }, "expect": "words" }
+  ]
+}

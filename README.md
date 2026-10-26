@@ -99,3 +99,5 @@ If headers can't be guessed, set `rate card columns` in config.md, e.g. `{"name"
 ## Commands
 
 `npm run build` · `npm test` · `npm run lint && npm run typecheck` · `npm run serve` · `npm run eval` (or `npm run eval -- injection`) · `npm run reindex`
+
+`npm run eval` scores six sets (threads, outcomes, calibration, promises, edits, injection) and writes `evals/score.md`. The code-only parts are free and take seconds. `EVAL_AGENT=1 npm run eval` also runs Claude Code headless (`claude -p`) on recorded threads and scores what it writes; that takes a few minutes and uses model credits. `EVAL_MODEL` picks the model.
