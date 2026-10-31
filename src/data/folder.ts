@@ -1,7 +1,7 @@
 // The user's data folder: where it is, creating it from the template, safe paths, git commits.
 
 import { execFile } from "node:child_process";
-import { cpSync, existsSync, renameSync } from "node:fs";
+import { cpSync, existsSync, renameSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { isAbsolute, join, normalize, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -41,6 +41,8 @@ export async function ensureDataFolder(dir: string): Promise<boolean> {
   cpSync(TEMPLATE_DIR, dir, { recursive: true, errorOnExist: false, force: false });
   // npm drops files named .gitignore from packages, so the template ships it as "gitignore".
   if (existsSync(join(dir, "gitignore"))) renameSync(join(dir, "gitignore"), join(dir, ".gitignore"));
+  // A new folder starts at the current format (see migrations.ts; kept in step by a test).
+  writeFileSync(join(dir, ".deal-harness-format"), `${DATA_FORMAT}\n`);
   if (await hasGit()) {
     if (!existsSync(join(dir, ".git"))) await git(dir, "init", "-q");
     await commit(dir, ["."], "Start deal harness data folder");
@@ -66,6 +68,8 @@ export function safePath(dir: string, rel: string, opts: { write?: boolean; inte
   }
   return { abs, rel: r };
 }
+
+export const DATA_FORMAT = 1;
 
 let gitAvailable: boolean | null = null;
 async function hasGit(): Promise<boolean> {

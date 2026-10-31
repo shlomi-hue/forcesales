@@ -1,17 +1,29 @@
 # deal-harness
 
-A sales agent harness that runs inside Claude Code (and later Claude Desktop, Codex, Gemini CLI). It reads Gmail, Sheets, Drive and Calendar, keeps deal memory in plain markdown, and writes Gmail drafts that you review and send yourself. It never sends. See `CLAUDE.md` and `BUILD_PLAN.md`.
+A sales agent harness that runs inside Claude Code, Claude Desktop, Codex and Gemini CLI. It reads Gmail, Sheets, Drive and Calendar, keeps deal memory in plain markdown, and writes Gmail drafts that you review and send yourself. It never sends. See `CLAUDE.md` and `BUILD_PLAN.md`.
 
-## Setup (by hand; the installer comes in Phase 9)
+## Setup
 
 1. **Google OAuth client.** In your Google Cloud project, turn on the Gmail, Sheets, Drive and Calendar APIs. Then create an OAuth client of type *Desktop app* and download its JSON. Add yourself as a test user on the OAuth consent screen.
-2. **Build:** `npm install && npm run build`
-3. **Data folder:** run `node dist/cli/index.js reindex` once. It creates `~/deal-harness-data` from `templates/data/` (set `DEAL_HARNESS_DATA` to put it somewhere else) and starts a git repo there.
-4. **Settings:**
-   - In `~/deal-harness-data/config.md`, set `rate card sheet` (a link is fine), `deals sheet` (your pipeline) and `max discount`.
-   - In `config.local.md` (not committed), add `- oauth client: /path/to/client_secret.json`.
-5. **Sign in:** `node dist/cli/index.js login`. The refresh token goes in your OS keychain. If you signed in during Phase 1, sign in again to grant Drive and Calendar access.
-6. **Hook into Claude Code:** copy `.mcp.example.json` to `.mcp.json`, fix the path, and open Claude Code in this folder. The skills load from `.claude/skills` (a link to `skills/`).
+2. **Install:** `npx deal-harness init` (from a checkout: `npm install && npm run build && node dist/cli/index.js init`). It:
+   - installs its own copy in `~/.deal-harness/app`, which every app runs, by absolute path, with the node you ran it with;
+   - creates your data folder (`~/deal-harness-data`, or `--data <folder>`) as a git repo;
+   - finds the apps you have and sets each one up:
+
+     | App | Server entry | Skills |
+     |---|---|---|
+     | Claude Code | `claude mcp add -s user` | `~/.claude/skills/` |
+     | Claude Desktop | `claude_desktop_config.json` | zips in `~/.deal-harness/desktop-skills/` for you to upload (Settings → Capabilities → Skills) |
+     | Codex | `~/.codex/config.toml` (`[mcp_servers.deal-harness]`) | `~/.agents/skills/` |
+     | Gemini CLI | `~/.gemini/settings.json` (`mcpServers`) | `~/.agents/skills/` |
+
+   - asks for the OAuth client JSON (saved in `config.local.md`, not committed) and signs you in to Google; the token goes in your OS keychain.
+
+   Pick apps with `--apps claude-code,codex`. Skill folders you already have with the same names are left alone. Gemini only starts servers in folders you trust.
+3. **Settings:** in `~/deal-harness-data/config.md`, set `rate card sheet` (a link is fine), `deals sheet` (your pipeline) and `max discount`.
+4. **Check:** `deal-harness doctor` (or `node ~/.deal-harness/app/node_modules/deal-harness/dist/cli/index.js doctor`). It checks Node, the install, the data folder, Google, that the server starts with no sending tools, and each app's entry and skills.
+
+`npx deal-harness@latest update` installs a newer version, brings your data folder's format up to date (it only adds, never overwrites), and refreshes every app. `deal-harness uninstall` takes the harness out of every app and removes the Google token (`--keep-login` keeps it); your data folder stays.
 
 ## Tools
 

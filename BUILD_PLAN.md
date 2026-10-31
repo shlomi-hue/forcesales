@@ -78,6 +78,7 @@ I install the harness on my machine with one command, point it at my Gmail and a
 **Check:** the full eval run completes and the scores look plausible to me.
 
 ## Phase 9 — Installer
+**Status:** built and tested on Linux. `init` installs a copy in `~/.deal-harness/app` (via `npm pack` + `npm install`, so it outlives the npx cache), creates and migrates the data folder, sets up each app found, saves the OAuth client path and signs in. `doctor`, `update` (data format migrations: add-only, numbered, in `src/data/migrations.ts`) and `uninstall` (never touches the data folder) work. A full init → doctor → update → uninstall cycle ran in a temp home on Linux with the real `claude` CLI (server "Connected"), Codex 0.166 (`codex mcp list`: enabled) and Gemini CLI 0.66 (server listed; skills found in `~/.agents/skills`). Not yet run: macOS, Windows, Claude Desktop; and `npx deal-harness` needs the package published (it's `private` now).
 **Done when:** on a clean machine, `npx deal-harness init` sets up Claude Code, Claude Desktop, Codex and Gemini CLI, and `deal-harness doctor` passes.
 - `init`: detect apps, link skills, write MCP entries, create the data folder with `git init`, Google sign-in.
 - `doctor`, `update` (with memory format migrations), `uninstall`.
@@ -88,5 +89,6 @@ I install the harness on my machine with one command, point it at my Gmail and a
 - Embedding model: dropped for now; full-text search only (2026-10-25).
 - Transcripts: not used; meetings come from Gemini notes (2026-10-25).
 - Email scan scope: /history asks the user each time; default 12 months, excludes from config.md (2026-10-26).
-- Exact config paths for Codex and Gemini CLI: check their current docs at Phase 9.
+- Exact config paths for Codex and Gemini CLI: checked 2026-10-31 from Codex's source and Gemini CLI's docs. Codex: `$CODEX_HOME/config.toml` `[mcp_servers.<name>]`, skills in `~/.codex/skills/` or `~/.agents/skills/`. Gemini: `~/.gemini/settings.json` `mcpServers`, skills in `~/.gemini/skills/` or `~/.agents/skills/`. The harness uses `~/.agents/skills/` for both.
+- How the package is published for `npx deal-harness`: npm (public or private scope) or straight from GitHub. Open.
 - Keychain library: propose one and ask before adding it in Phase 1.

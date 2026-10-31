@@ -6,6 +6,7 @@ import { login } from "../google/auth.js";
 import { keychainStore } from "../google/token-store.js";
 import { reindex } from "../index/search.js";
 import { confirmOutcomes } from "./confirm.js";
+import { doctor, init, uninstall, update } from "./install.js";
 import { learnNow, reviewLessons } from "./lessons.js";
 import { runJob, type Job } from "./run.js";
 import { schedule } from "./schedule.js";
@@ -15,6 +16,14 @@ const { version } = createRequire(import.meta.url)("../../package.json") as { ve
 
 const HELP = `deal-harness ${version}
 
+  deal-harness init       set up the harness in Claude Code, Claude Desktop, Codex and Gemini CLI,
+                          create your data folder and sign in to Google
+                          [--apps claude-code,codex,...] [--data <folder>] [--oauth-client <file>]
+                          [--no-login] [--yes] [--here: run from this checkout, no copy]
+  deal-harness doctor     check that everything works
+  deal-harness update     run as \`npx deal-harness@latest update\`: install that version, update
+                          your data folder's format, and refresh every app
+  deal-harness uninstall  take the harness out of every app [--keep-login]; your data folder stays
   deal-harness serve    start the MCP server on stdio (used by Claude Code)
   deal-harness login    sign in to Google; the token goes in your OS keychain
   deal-harness logout   remove the token from the keychain
@@ -40,6 +49,14 @@ async function main(): Promise<void> {
   switch (cmd) {
     case "serve":
       return serve(version);
+    case "init":
+      return init(process.argv.slice(3), log);
+    case "doctor":
+      return doctor(log);
+    case "update":
+      return update(process.argv.slice(3), log);
+    case "uninstall":
+      return uninstall(process.argv.slice(3), log);
     case "login":
       return login(loadConfig(dataDir()).oauthClientPath, keychainStore(), log);
     case "logout":
