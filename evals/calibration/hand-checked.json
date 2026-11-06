@@ -1,0 +1,42 @@
+{
+  "about": "Numbers worked out by hand. Logged probabilities: the last one on or before each close counts; ones after the close and unconfirmed deals don't.",
+  "deals": [
+    { "account": "c01", "outcome": "won",  "closed": "2026-06-01", "log": [["2026-04-01", 30], ["2026-05-20", 90], ["2026-06-10", 100]] },
+    { "account": "c02", "outcome": "won",  "closed": "2026-06-02", "log": [["2026-05-01", 80]] },
+    { "account": "c03", "outcome": "lost", "closed": "2026-06-03", "log": [["2026-05-01", 70], ["2026-06-20", 0]] },
+    { "account": "c04", "outcome": "won",  "closed": "2026-06-04", "log": [["2026-05-01", 60]] },
+    { "account": "c05", "outcome": "lost", "closed": "2026-06-05", "log": [["2026-05-01", 50]] },
+    { "account": "c06", "outcome": "lost", "closed": "2026-06-06", "log": [["2026-05-01", 40]] },
+    { "account": "c07", "outcome": "won",  "closed": "2026-06-07", "log": [["2026-05-01", 30]] },
+    { "account": "c08", "outcome": "lost", "closed": "2026-06-08", "log": [["2026-05-01", 20]] },
+    { "account": "c09", "outcome": "lost", "closed": "2026-06-09", "log": [["2026-05-01", 10]] },
+    { "account": "c10", "outcome": "won",  "closed": "2026-06-10", "log": [["2026-05-01", 80]] },
+    { "account": "c11", "outcome": "lost", "closed": "2026-06-11", "confirmed": false, "log": [["2026-05-01", 95]] }
+  ],
+  "expect": {
+    "scored": 10,
+    "brier": "0.169",
+    "baselineBrier": "0.250",
+    "buckets": { "0-20%": 1, "20-40%": 2, "40-60%": 2, "60-80%": 2, "80-100%": 3 }
+  },
+  "pipeline": {
+    "period": "2026-Q4",
+    "deals": [
+      { "account": "acme", "value": 40000, "currency": ["USD"], "stage": "proposal", "close": "2026-11-15", "status": "open", "harnessProbability": 0.6 },
+      { "account": "initech", "value": 25000, "currency": ["USD"], "stage": "evaluation", "close": "2026-12-01", "status": "open", "sheetProbability": 0.3 },
+      { "account": "hooli", "value": 10000, "currency": ["USD"], "stage": "closed", "close": "2026-10-10", "status": "won" },
+      { "account": "umbrella", "value": 30000, "currency": ["USD"], "stage": "proposal", "close": "2027-01-20", "status": "open", "harnessProbability": 0.5 },
+      { "account": "stark", "value": 20000, "currency": ["USD"], "stage": "closed", "close": "2026-11-01", "status": "lost" },
+      { "account": "globo", "value": 15000, "currency": ["SGD"], "stage": "discovery", "close": "2026-12-15", "status": "open", "harnessProbability": 0.4 }
+    ],
+    "totals": {
+      "USD": { "won": 10000, "expected": 41500, "likely": 50000, "possible": 75000 },
+      "SGD": { "won": 0, "expected": 6000, "likely": 0, "possible": 15000 }
+    },
+    "whatIfs": [
+      { "name": "acme slips to January", "changes": [{ "account": "acme", "close": "2027-01-10" }], "delta": { "USD": { "won": 0, "expected": -24000, "likely": -40000, "possible": -40000 } } },
+      { "name": "initech to 70%", "changes": [{ "account": "initech", "probability": 0.7 }], "delta": { "USD": { "won": 0, "expected": 10000, "likely": 25000, "possible": 0 } } },
+      { "name": "globo lost", "changes": [{ "account": "globo", "status": "lost" }], "delta": { "SGD": { "won": 0, "expected": -6000, "likely": 0, "possible": -15000 } } }
+    ]
+  }
+}

@@ -17,7 +17,8 @@ description: A sales report for a period covering the forecast, how well the har
    - **Segments:** from `company/icp-map.md`. Only cells with enough deals count.
    - **Plays and messages:** "worked" quotes from won past deals (`memory_search` "worked", then read the files). Only confirmed wins count.
    - **What keeps going wrong:** loss reasons from `memory/history/baseline.md`.
-   - Lessons the user accepted (`memory/lessons/accepted.md`).
+   - Lessons the user accepted (`memory/lessons/accepted.md`) and plays in `company/playbook.md`.
+   - If you see a pattern backed by at least three confirmed deals that isn't a lesson yet, propose it with `lesson_propose` (kind `play`, with the deals as evidence). Never write lessons into the report as if they were accepted.
 5. **Write the report** with `memory_write` to `memory/reports/<YYYY-MM-DD>.md`. Keep it to one page, with the numbers copied exactly from the tools. Then offer `pdf_export` with footer "Internal".
 
 Unconfirmed outcomes never count in calibration or "what's working". If many outcomes wait for confirmation, tell the user to run `deal-harness confirm`.

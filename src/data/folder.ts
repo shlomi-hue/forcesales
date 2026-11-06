@@ -1,7 +1,7 @@
 // The user's data folder: where it is, creating it from the template, safe paths, git commits.
 
 import { execFile } from "node:child_process";
-import { cpSync, existsSync, renameSync } from "node:fs";
+import { cpSync, existsSync, renameSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { isAbsolute, join, normalize, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -27,8 +27,12 @@ export const TOOL_ONLY: Record<string, string> = {
   "memory/history/baseline.md": "history_stats",
   "company/icp-map.md": "history_stats",
   "memory/history/calibration.md": "calibration_score",
+  "memory/lessons/proposed.md": "lessons_learn or lesson_propose",
 };
-const TOOL_ONLY_PATTERNS: [RegExp, string][] = [[/^memory\/deals\/[^/]+\/probabilities\.md$/, "probability_set"]];
+const TOOL_ONLY_PATTERNS: [RegExp, string][] = [
+  [/^memory\/deals\/[^/]+\/probabilities\.md$/, "probability_set"],
+  [/^memory\/edits\//, "edits_capture"],
+];
 const toolFor = (r: string) => TOOL_ONLY[r] ?? TOOL_ONLY_PATTERNS.find(([re]) => re.test(r))?.[1];
 
 // Create the folder from the template on first use. Returns true when it was just created.
@@ -37,6 +41,8 @@ export async function ensureDataFolder(dir: string): Promise<boolean> {
   cpSync(TEMPLATE_DIR, dir, { recursive: true, errorOnExist: false, force: false });
   // npm drops files named .gitignore from packages, so the template ships it as "gitignore".
   if (existsSync(join(dir, "gitignore"))) renameSync(join(dir, "gitignore"), join(dir, ".gitignore"));
+  // A new folder starts at the current format (see migrations.ts; kept in step by a test).
+  writeFileSync(join(dir, ".deal-harness-format"), `${DATA_FORMAT}\n`);
   if (await hasGit()) {
     if (!existsSync(join(dir, ".git"))) await git(dir, "init", "-q");
     await commit(dir, ["."], "Start deal harness data folder");
@@ -62,6 +68,8 @@ export function safePath(dir: string, rel: string, opts: { write?: boolean; inte
   }
   return { abs, rel: r };
 }
+
+export const DATA_FORMAT = 1;
 
 let gitAvailable: boolean | null = null;
 async function hasGit(): Promise<boolean> {

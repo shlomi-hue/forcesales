@@ -1,10 +1,23 @@
 {
   "name": "deal-harness",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Sales agent harness: skills, a local MCP tools server, and markdown deal memory. Writes Gmail drafts only, never sends.",
   "type": "module",
-  "license": "UNLICENSED",
-  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shlomi-hue/forcesales.git"
+  },
+  "keywords": [
+    "sales",
+    "mcp",
+    "claude",
+    "gmail",
+    "agent"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=20"
   },
@@ -23,7 +36,8 @@
     "serve": "node dist/cli/index.js serve",
     "eval": "vitest run --config evals/vitest.config.ts",
     "lint": "eslint .",
-    "reindex": "node dist/cli/index.js reindex"
+    "reindex": "node dist/cli/index.js reindex",
+    "prepublishOnly": "npm run lint && npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
     "@googleapis/calendar": "^16.0.0",

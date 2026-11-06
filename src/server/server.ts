@@ -18,6 +18,7 @@ import { scanMail, scanReport, scanTable, sentSamples } from "../tools/scan.js";
 import { listMeetingsWithNotes, readMeetingNotes } from "../tools/meetings.js";
 import { completePromise, formatDue, logPromise, promisesDue } from "../tools/promises.js";
 import { stakeholderView } from "../tools/stakeholders.js";
+import { captureSent, formatCapture, learnLessons, proposeLesson, recordDraft } from "../tools/learn.js";
 import { addSignal, memoryList, memoryRead, memorySearch, memoryWrite, type MemoryDeps, type WriteResult } from "../tools/memory.js";
 import { readTabs, tabsAsText, type Sheets } from "../tools/sheets.js";
 import { dataBlock, DATA_NOTE } from "./data-block.js";
@@ -136,6 +137,10 @@ export function buildServer(deps: ServerDeps, version: string): McpServer {
         if (!result.created) {
           return fail(`REFUSED: no draft was created.\n${result.reasons.map((r) => `- ${r}`).join("\n")}`);
         }
+        // Remembered so edits_capture can compare it with what the user sends.
+        await recordDraft(deps.memory.dir, {
+          draftId: result.draftId, threadId: result.threadId, to: result.to, subject: result.subject, body: input.body, created: new Date().toISOString(),
+        });
         return text(
           `Draft created (not sent). draft_id: ${result.draftId}, to: ${result.to.join(", ")}.\nReview and send it from Gmail Drafts: https://mail.google.com/mail/u/0/#drafts`,
         );
@@ -588,6 +593,46 @@ export function buildServer(deps: ServerDeps, version: string): McpServer {
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
     () => guarded(async () => text(await calibrationScore(deps.memory))),
+  );
+
+  server.registerTool(
+    "edits_capture",
+    {
+      title: "Capture what the user changed in sent drafts",
+      description:
+        "Check the drafts the harness made: for each one the user has sent, record the words they cut, changed or added before sending, in memory/edits/<month>.md. Drafts still in Gmail Drafts wait for next time. Run it before lessons_learn.",
+      inputSchema: {},
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+    },
+    () => guarded(async () => text(formatCapture(await captureSent(deps.gmail(), deps.memory)))),
+  );
+
+  server.registerTool(
+    "lessons_learn",
+    {
+      title: "Propose lessons from edits and outcomes",
+      description:
+        "Count repeated edits to drafts (the same words cut or changed in 3 or more sent drafts) and repeated loss reasons or competitor losses in confirmed outcomes, and add new ones to memory/lessons/proposed.md. Proposed lessons aren't used until the user accepts them; only the user can.",
+      inputSchema: {},
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    () => guarded(async () => text(await learnLessons(deps.memory))),
+  );
+
+  server.registerTool(
+    "lesson_propose",
+    {
+      title: "Propose one lesson",
+      description:
+        "Propose a lesson you noticed (kind 'voice' for how emails should read, 'play' for how to run deals), with the evidence. It goes in memory/lessons/proposed.md and isn't used until the user accepts it. A lesson already proposed, accepted or rejected isn't added again.",
+      inputSchema: {
+        kind: z.enum(["voice", "play"]),
+        rule: z.string().min(5).max(200).describe('The rule, short and plain, e.g. Never write "circling back"'),
+        why: z.string().min(10).max(300).describe("The evidence: which deals or drafts, with dates"),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    (input) => guarded(async () => text(await proposeLesson(deps.memory, input))),
   );
 
   return server;

@@ -15,6 +15,10 @@ Shared settings. Put machine-specific values (file paths) in `config.local.md`, 
 ## Limits
 - max discount: 10%
 
+## Drafts
+<!-- on: /proposal has the buyer read each draft first and shows their likely objections next to it. off: skip it. -->
+- buyer critic: on
+
 ## Google
 - oauth client:
 

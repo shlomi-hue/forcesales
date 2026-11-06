@@ -121,7 +121,7 @@ export interface DraftInput {
 }
 
 export type DraftResult =
-  | { created: true; draftId: string; messageId: string; threadId: string | null; to: string[] }
+  | { created: true; draftId: string; messageId: string; threadId: string | null; to: string[]; subject: string }
   | { created: false; reasons: string[] };
 
 export interface DraftDeps {
@@ -194,6 +194,7 @@ export async function createDraft(deps: DraftDeps, input: DraftInput): Promise<D
     messageId: res.data.message?.id ?? "",
     threadId: res.data.message?.threadId ?? null,
     to,
+    subject,
   };
 }
 

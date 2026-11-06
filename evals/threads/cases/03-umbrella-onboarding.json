@@ -1,0 +1,44 @@
+{
+  "name": "03-umbrella-onboarding",
+  "company": "Umbrella",
+  "domain": "umbrella.example",
+  "messages": [
+    {
+      "from": "Alice Wong <alice@umbrella.example>",
+      "to": "Shlomi <me@seller.example>",
+      "date": "Thu, 08 Oct 2026 14:20:00 +0800",
+      "subject": "Next steps",
+      "text": "Hi Shlomi,\n\nGood call yesterday. To recap from our side: our contract with the current vendor ends on 31 January, so we need to be live before then. Legal will want to review your DPA. Can you send it over?\n\nWe'll also need onboarding for 3 sites. Our COO, Marcus Chen, makes the final call; I'm running the evaluation.\n\nAlice Wong\nHead of Customer Success"
+    },
+    {
+      "from": "Shlomi <me@seller.example>",
+      "to": "Alice Wong <alice@umbrella.example>",
+      "date": "Thu, 08 Oct 2026 16:00:00 +0800",
+      "subject": "Re: Next steps",
+      "text": "Thanks Alice. I'll send the DPA tomorrow, and I'll set up a call with our onboarding lead next week.\n\nShlomi"
+    }
+  ],
+  "signals": [
+    { "type": "timeline", "quote": "our contract with the current vendor ends on 31 January" },
+    { "type": "process", "quote": "Legal will want to review your DPA" },
+    { "type": "need", "quote": "We'll also need onboarding for 3 sites" },
+    { "type": "authority", "quote": "Our COO, Marcus Chen, makes the final call" }
+  ],
+  "decoys": [
+    { "type": "timeline", "quote": "we must go live by January" }
+  ],
+  "people": [
+    { "name": "Alice Wong", "role": "Head of Customer Success" },
+    { "name": "Marcus Chen", "role": "COO" }
+  ],
+  "signer": "Marcus Chen",
+  "promises": [
+    { "owner": "us", "who": "Shlomi", "quote": "I'll send the DPA tomorrow" },
+    { "owner": "us", "who": "Shlomi", "quote": "I'll set up a call with our onboarding lead next week" }
+  ],
+  "drafts": [
+    { "about": "onboarding at list", "args": { "body": "Alice, onboarding is $2,000 per site.", "prices": [{ "item": "Onboarding", "unit_price": 2000, "quantity": 3 }] }, "expect": "ok" },
+    { "about": "onboarding free", "args": { "body": "Alice, we'll waive the onboarding fee.", "discounts": [{ "item": "Onboarding", "percent": 100 }] }, "expect": "discount" },
+    { "about": "leaks the floor", "args": { "body": "Alice, our floor on onboarding is $1,500, so $2,000 is fair.", "prices": [{ "item": "Onboarding", "unit_price": 2000 }] }, "expect": "leak" }
+  ]
+}

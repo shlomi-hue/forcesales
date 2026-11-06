@@ -4,3 +4,4 @@ index.sqlite-*
 runs/
 exports/
 scan/
+memory/edits/pending.json

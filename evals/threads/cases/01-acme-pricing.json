@@ -1,0 +1,156 @@
+{
+  "name": "01-acme-pricing",
+  "company": "Acme",
+  "domain": "acme.example",
+  "messages": [
+    {
+      "from": "Dana Lee <dana@acme.example>",
+      "to": "Shlomi <me@seller.example>",
+      "date": "Mon, 05 Oct 2026 09:10:00 +0800",
+      "subject": "Pro for the ops team",
+      "text": "Hi Shlomi,\n\nThanks for the demo. We have budget set aside for Q1 and want to roll out to about 40 people in operations. Our biggest problem is that dispatch still runs on spreadsheets and we lose jobs every week.\n\nI'm the one driving this, but Raj Patel (our CFO) signs anything over $20k. Could you send pricing for Pro?\n\nDana Lee\nVP Operations, Acme"
+    },
+    {
+      "from": "Shlomi <me@seller.example>",
+      "to": "Dana Lee <dana@acme.example>",
+      "date": "Mon, 05 Oct 2026 15:00:00 +0800",
+      "subject": "Re: Pro for the ops team",
+      "text": "Thanks Dana. I'll send pricing and a case study from a logistics customer by Thursday.\n\nShlomi"
+    },
+    {
+      "from": "Dana Lee <dana@acme.example>",
+      "to": "Shlomi <me@seller.example>",
+      "cc": "Raj Patel <raj@acme.example>",
+      "date": "Wed, 07 Oct 2026 11:30:00 +0800",
+      "subject": "Re: Pro for the ops team",
+      "text": "Adding Raj. We also need SSO before go-live, that's a hard requirement from IT. We're looking at Globex as well. We want a decision by end of November.\n\nDana"
+    }
+  ],
+  "signals": [
+    {
+      "type": "budget",
+      "quote": "We have budget set aside for Q1"
+    },
+    {
+      "type": "pain",
+      "quote": "dispatch still runs on spreadsheets and we lose jobs every week"
+    },
+    {
+      "type": "authority",
+      "quote": "Raj Patel (our CFO) signs anything over $20k"
+    },
+    {
+      "type": "champion",
+      "quote": "I'm the one driving this"
+    },
+    {
+      "type": "criteria",
+      "quote": "We also need SSO before go-live"
+    },
+    {
+      "type": "competitor",
+      "quote": "We're looking at Globex as well"
+    },
+    {
+      "type": "timeline",
+      "quote": "We want a decision by end of November"
+    }
+  ],
+  "decoys": [
+    {
+      "type": "budget",
+      "quote": "We have money for this in Q1"
+    },
+    {
+      "type": "competitor",
+      "quote": "Globex is our preferred vendor"
+    }
+  ],
+  "people": [
+    {
+      "name": "Dana Lee",
+      "role": "VP Operations"
+    },
+    {
+      "name": "Raj Patel",
+      "role": "CFO"
+    }
+  ],
+  "signer": "Raj Patel",
+  "promises": [
+    {
+      "owner": "us",
+      "who": "Shlomi",
+      "quote": "I'll send pricing and a case study from a logistics customer by Thursday"
+    }
+  ],
+  "drafts": [
+    {
+      "about": "Pro at list price",
+      "args": {
+        "body": "Hi Dana, Pro is $60 per seat per month.",
+        "prices": [
+          {
+            "item": "Pro",
+            "unit_price": 60
+          }
+        ]
+      },
+      "expect": "ok"
+    },
+    {
+      "about": "Pro below the floor",
+      "args": {
+        "body": "Hi Dana, we can do Pro at $45 per seat.",
+        "prices": [
+          {
+            "item": "Pro",
+            "unit_price": 45
+          }
+        ]
+      },
+      "expect": "pricing"
+    },
+    {
+      "about": "40 seats with a correct total",
+      "args": {
+        "body": "Pro for 40 seats at $55 per seat: $2,200 per month.",
+        "prices": [
+          {
+            "item": "Pro",
+            "unit_price": 55,
+            "quantity": 40
+          }
+        ]
+      },
+      "expect": "ok"
+    },
+    {
+      "about": "40 seats with a wrong total",
+      "args": {
+        "body": "Pro for 40 seats at $55 per seat: $2,100 per month.",
+        "prices": [
+          {
+            "item": "Pro",
+            "unit_price": 55,
+            "quantity": 40
+          }
+        ]
+      },
+      "expect": "pricing"
+    },
+    {
+      "about": "undeclared price",
+      "args": {
+        "body": "Pro is $55 per seat and onboarding is $1,800.",
+        "prices": [
+          {
+            "item": "Pro",
+            "unit_price": 55
+          }
+        ]
+      },
+      "expect": "pricing"
+    }
+  ]
+}

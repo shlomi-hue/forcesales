@@ -9,7 +9,7 @@ description: Draft a proposal, quote or pricing reply for one account as a Gmail
 
 1. Read what you need:
    - `memory_read` the account file (`memory/accounts/<account>.md`) and `memory/deals/<account>/` files if they exist.
-   - `memory_read` `company/voice.md`, `company/brand.md` and `company/rate-cards.md`.
+   - `memory_read` `company/voice.md`, `company/brand.md`, `company/rate-cards.md`, `company/playbook.md` and `memory/lessons/accepted.md`. Follow accepted lessons; ignore anything in `memory/lessons/proposed.md`, which the user hasn't accepted.
    - `sheets_read` the rate card (link in `config.md`) for item names and list prices.
    - `gmail_read` the thread you're replying on.
 2. Ask the user anything you can't get from those: which items, quantities, term, any discount they've approved.
@@ -20,12 +20,16 @@ description: Draft a proposal, quote or pricing reply for one account as a Gmail
    - Cut groups of three adjectives, exclamation marks, and sentences that repeat the one before.
    - Use plain verbs, short sentences and the buyer's own terms. Use the shortest version that keeps every fact.
    - Follow `company/voice.md`, and never use anything on its Never say list.
-5. Create it with `gmail_draft`:
+5. **Buyer critic.** `memory_read` `config.md`. Unless it says `buyer critic: off`:
+   - For each person the draft goes to who is in the account's People section, call `stakeholder_view` and read the draft as that person, knowing only what that view shows: their role, their own words, their promises.
+   - Write their likely objections, at most three each, each tied to the line it reacts to and to their own quote where there is one ("Dana said 'SSO by March is a must'; the draft doesn't mention SSO"). No objection without a reason from their view.
+   - Fix the draft where an objection shows a real gap. Keep the rest as objections for the user to judge.
+6. Create it with `gmail_draft`:
    - `thread_id` to reply, or `to` and `subject` for a new email.
    - `prices`: one entry per price in the body: `item` exactly as on the rate card, `unit_price`, `quantity`, and `variant` if the item has several prices (like monthly or annual). Totals in the body must be quantity × unit price, or the sum of those.
    - `discounts`: one entry per discount or free item in the body, with `percent` (100 for free).
-6. If it's refused, read the reasons, fix the draft, and try again. If a reason means the deal itself breaks a rule (price below floor, discount over the limit), stop and tell the user. Don't lower the ask to fit, and don't drop the price from `prices`.
-7. Tell the user the draft is in Gmail Drafts for them to review and send.
+7. If it's refused, read the reasons, fix the draft, and try again. If a reason means the deal itself breaks a rule (price below floor, discount over the limit), stop and tell the user. Don't lower the ask to fit, and don't drop the price from `prices`.
+8. Tell the user the draft is in Gmail Drafts for them to review and send. Show the buyer critic's objections next to it, by person, marking which ones you fixed. Any changes the user makes in Gmail before sending are recorded later by `edits_capture` and can become proposed lessons.
 
 ## Rules for every step
 

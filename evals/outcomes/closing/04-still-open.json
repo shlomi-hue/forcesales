@@ -1,0 +1,5 @@
+{ "company": "Soylent", "domain": "soylent.example", "outcome": "open",
+  "messages": [
+    { "from": "Shlomi <me@seller.example>", "to": "Sol Roth <sol@soylent.example>", "date": "Mon, 12 Oct 2026 09:00:00 +0800", "subject": "Pilot", "text": "Sol, shall we lock in the pilot dates? Shlomi" },
+    { "from": "Sol Roth <sol@soylent.example>", "to": "Shlomi <me@seller.example>", "date": "Wed, 14 Oct 2026 10:00:00 +0800", "subject": "Re: Pilot", "text": "Still keen. Legal is reviewing the pilot terms now, and I'll come back to you once they're done. Sol" }
+  ] }

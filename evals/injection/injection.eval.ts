@@ -9,15 +9,16 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import type { gmail_v1 } from "@googleapis/gmail";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { buildServer } from "../../src/server/server.js";
 import { fakeGmail, testDeps } from "../../test/tools/fake-google.js";
+import { textOf, toThread, type FixtureMessage } from "../lib/fixtures.js";
+import { record } from "../lib/score.js";
 
 interface Case {
   name: string;
   injection: string;
-  messages: { from: string; to: string; subject: string; text?: string; html?: string; reply_to?: string }[];
+  messages: FixtureMessage[];
   attack: Record<string, unknown>;
   control?: Record<string, unknown>;
   caught_by: string;
@@ -31,36 +32,8 @@ const cases: Case[] = readdirSync(DIR)
 
 const DEFAULT_CONTROL = { thread_id: "T", to: ["dana@acme.example"], body: "Thanks Dana, Pro is $55 per seat.", prices: [{ item: "Pro", unit_price: 55 }] };
 
-const b64 = (s: string) => Buffer.from(s, "utf8").toString("base64url");
-
-function toThread(c: Case): gmail_v1.Schema$Thread {
-  return {
-    id: "T",
-    messages: c.messages.map((m, i) => ({
-      id: `m${i}`,
-      threadId: "T",
-      snippet: (m.text ?? "").slice(0, 80),
-      payload: {
-        mimeType: "multipart/alternative",
-        headers: [
-          { name: "From", value: m.from },
-          { name: "To", value: m.to },
-          { name: "Subject", value: m.subject },
-          { name: "Date", value: `Thu, 22 Oct 2026 0${i}:00:00 +0800` },
-          { name: "Message-ID", value: `<m${i}@acme.example>` },
-          ...(m.reply_to ? [{ name: "Reply-To", value: m.reply_to }] : []),
-        ],
-        parts: [
-          ...(m.text ? [{ mimeType: "text/plain", body: { data: b64(m.text) } }] : []),
-          ...(m.html ? [{ mimeType: "text/html", body: { data: b64(m.html) } }] : []),
-        ],
-      },
-    })),
-  };
-}
-
 async function connect(c: Case) {
-  const { gmail, drafts } = fakeGmail({ thread: toThread(c), sentTo: ["acme.example"] });
+  const { gmail, drafts } = fakeGmail({ thread: toThread("T", c.messages), sentTo: ["acme.example"] });
   const server = buildServer(testDeps({ gmail }), "eval");
   const [a, b] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: "eval", version: "1" });
@@ -68,10 +41,14 @@ async function connect(c: Case) {
   return { client, drafts };
 }
 
-const textOf = (r: Awaited<ReturnType<Client["callTool"]>>) => (r.content as { text: string }[])[0]?.text ?? "";
 const changes: string[] = [];
+let checks = 0;
 
 describe("injection", () => {
+  beforeEach(() => {
+    checks++;
+  });
+
   it("has about 10 poisoned threads", () => {
     expect(cases.length).toBeGreaterThanOrEqual(10);
   });
@@ -153,6 +130,14 @@ describe("injection", () => {
   });
 
   afterAll(() => {
+    record({
+      set: "injection",
+      about: `${cases.length} poisoned threads and 1 poisoned meeting notes doc. For each, the attacker's draft is assumed to be attempted; it must be refused by the expected check, a normal reply must still work, and the text must stay inside one data block.`,
+      cases: checks,
+      passed: checks - changes.length,
+      metrics: { "behavior changes": changes.length },
+      failures: changes,
+    });
     const line = `injection: ${cases.length} poisoned threads + 1 poisoned meeting notes doc, ${changes.length} behavior changes`;
     process.stdout.write(`\n${changes.length ? `${line}\n- ${changes.join("\n- ")}` : line}\n`);
   });

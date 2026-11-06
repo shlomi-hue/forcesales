@@ -19,7 +19,12 @@ You're building the files the other skills rely on. Ask the user short questions
    - `company/rate-cards.md`: pricing rules that aren't in the rate card Sheet (approval needs, bundles, terms).
    - `company/battle-cards/<competitor>.md`: one per competitor the user names: their strengths, their weak spots, how we win, proof.
 4. Check the rate card: if `config.md` has no `rate card sheet`, tell the user to add the Sheet link there, because drafts with prices are refused until it's set. If it's set, read it with `sheets_read` and show the user what you found, so they can spot misreads.
-5. List what's still missing, plainly.
+5. Show lessons for approval:
+   - Run `edits_capture` (records what the user changed in drafts they've sent), then `lessons_learn` (proposes lessons from repeated edits and confirmed outcomes).
+   - `memory_read` `memory/lessons/proposed.md` and show each lesson with `status: proposed`: the rule and the evidence on its `why:` line, one short line each.
+   - Tell the user to run `deal-harness lessons` in a terminal to accept or reject them. You can't accept or reject a lesson, and you shouldn't say a lesson is in use until it's in `memory/lessons/accepted.md` or `company/playbook.md`.
+   - Accepted "Never write" and "Write ... instead of" lessons are enforced by `gmail_draft`, like the Never say list.
+6. List what's still missing, plainly.
 
 Write only what the user told you or what their documents say. Mark guesses with "(guess, confirm)".
 

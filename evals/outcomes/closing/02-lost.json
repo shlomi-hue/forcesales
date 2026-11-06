@@ -1,0 +1,5 @@
+{ "company": "Wayne Retail", "domain": "wayne.example", "outcome": "lost",
+  "messages": [
+    { "from": "Shlomi <me@seller.example>", "to": "Lucius Fox <lucius@wayne.example>", "date": "Tue, 10 Mar 2026 09:00:00 +0800", "subject": "Proposal", "text": "Lucius, any thoughts on the proposal? Shlomi" },
+    { "from": "Lucius Fox <lucius@wayne.example>", "to": "Shlomi <me@seller.example>", "date": "Fri, 13 Mar 2026 11:00:00 +0800", "subject": "Re: Proposal", "text": "Thanks for all the work on this. After a long review we've decided to go with Globex, mainly on price. I hope we can stay in touch. Lucius" }
+  ] }

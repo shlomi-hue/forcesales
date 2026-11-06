@@ -64,6 +64,7 @@ I install the harness on my machine with one command, point it at my Gmail and a
 **Check:** a what-if changes the quarter total by the amount a manual calculation gives; the calibration report runs on confirmed history.
 
 ## Phase 7 — Learning loop
+**Status:** built and unit-tested. `gmail_draft` remembers each draft; `edits_capture` (or `deal-harness learn`) pairs it with the sent email and keeps only the changed words in `memory/edits/<month>.md`. `lessons_learn` counts in code: the same words cut or changed in 3+ drafts become a proposed voice rule; a loss reason or competitor shared by 3+ confirmed losses becomes a proposed play. `deal-harness lessons` is the only way to accept (voice → accepted.md, play → playbook.md) or reject; accepted "Never write" rules are enforced by `gmail_draft`; rejected ones are never proposed again. Buyer critic in /proposal, `buyer critic: on|off` in config.md. Live check pending (needs three real sent drafts).
 **Done when:** my edits to drafts turn into proposed voice rules, and the buyer critic's objections show next to each draft.
 - `capture-sent` pairs drafts with sent mail; `edits/`.
 - `scripts/learn` proposes lessons from outcomes and edits; /company shows them for approval; `playbook.md`.
@@ -71,11 +72,13 @@ I install the harness on my machine with one command, point it at my Gmail and a
 **Check:** edit three drafts the same way and see one proposed rule; reject it and see it not applied.
 
 ## Phase 8 — Evals
+**Status:** done. `npm run eval` runs six sets and writes `evals/score.md`: threads (draft verdicts, quote checks, and with `EVAL_AGENT=1` a real Claude Code /account run scored on signals, people, roles, signer and promises), outcomes (replay in close order, ICP map hand count, agent outcome judging), calibration (Brier and forecast/what-if numbers worked out by hand), promises, edits (planted patterns vs noise), injection. Agent parts run Claude Code headless against the harness over local HTTP with recorded fixtures, in a temp folder that has only the shipped skills. The edits set found a diff bug (edits on neighbouring lines merged into one), now fixed.
 **Done when:** `npm run eval` scores all sets and writes `evals/score.md`.
 - Threads (signals, decision map, pricing), outcome replay, calibration, promises, edits, injection.
 **Check:** the full eval run completes and the scores look plausible to me.
 
 ## Phase 9 — Installer
+**Status:** built and tested on Linux. `init` installs a copy in `~/.deal-harness/app` (via `npm pack` + `npm install`, so it outlives the npx cache), creates and migrates the data folder, sets up each app found, saves the OAuth client path and signs in. `doctor`, `update` (data format migrations: add-only, numbered, in `src/data/migrations.ts`) and `uninstall` (never touches the data folder) work. A full init → doctor → update → uninstall cycle ran in a temp home on Linux with the real `claude` CLI (server "Connected"), Codex 0.166 (`codex mcp list`: enabled) and Gemini CLI 0.66 (server listed; skills found in `~/.agents/skills`). Not yet run: macOS, Windows, Claude Desktop; and the first `npm publish` (0.1.0).
 **Done when:** on a clean machine, `npx deal-harness init` sets up Claude Code, Claude Desktop, Codex and Gemini CLI, and `deal-harness doctor` passes.
 - `init`: detect apps, link skills, write MCP entries, create the data folder with `git init`, Google sign-in.
 - `doctor`, `update` (with memory format migrations), `uninstall`.
@@ -86,5 +89,6 @@ I install the harness on my machine with one command, point it at my Gmail and a
 - Embedding model: dropped for now; full-text search only (2026-10-25).
 - Transcripts: not used; meetings come from Gemini notes (2026-10-25).
 - Email scan scope: /history asks the user each time; default 12 months, excludes from config.md (2026-10-26).
-- Exact config paths for Codex and Gemini CLI: check their current docs at Phase 9.
+- Exact config paths for Codex and Gemini CLI: checked 2026-10-31 from Codex's source and Gemini CLI's docs. Codex: `$CODEX_HOME/config.toml` `[mcp_servers.<name>]`, skills in `~/.codex/skills/` or `~/.agents/skills/`. Gemini: `~/.gemini/settings.json` `mcpServers`, skills in `~/.gemini/skills/` or `~/.agents/skills/`. The harness uses `~/.agents/skills/` for both.
+- How the package is published for `npx deal-harness`: public npm, as `deal-harness` (decided 2026-11-06). License: MIT. Publish with `npm publish`; `prepublishOnly` runs lint, typecheck, tests and the build first.
 - Keychain library: propose one and ask before adding it in Phase 1.
