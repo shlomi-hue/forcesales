@@ -90,5 +90,5 @@ I install the harness on my machine with one command, point it at my Gmail and a
 - Transcripts: not used; meetings come from Gemini notes (2026-10-25).
 - Email scan scope: /history asks the user each time; default 12 months, excludes from config.md (2026-10-26).
 - Exact config paths for Codex and Gemini CLI: checked 2026-10-31 from Codex's source and Gemini CLI's docs. Codex: `$CODEX_HOME/config.toml` `[mcp_servers.<name>]`, skills in `~/.codex/skills/` or `~/.agents/skills/`. Gemini: `~/.gemini/settings.json` `mcpServers`, skills in `~/.gemini/skills/` or `~/.agents/skills/`. The harness uses `~/.agents/skills/` for both.
-- How the package is published for `npx deal-harness`: public npm, as `deal-harness` (decided 2026-11-06). License stays UNLICENSED (code visible, no rights granted). Publish with `npm publish`; `prepublishOnly` runs lint, typecheck, tests and the build first.
+- How the package is published for `npx deal-harness`: public npm, as `deal-harness` (decided 2026-11-06). License: MIT. Publish with `npm publish`; `prepublishOnly` runs lint, typecheck, tests and the build first.
 - Keychain library: propose one and ask before adding it in Phase 1.

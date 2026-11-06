@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Sales agent harness: skills, a local MCP tools server, and markdown deal memory. Writes Gmail drafts only, never sends.",
   "type": "module",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/shlomi-hue/forcesales.git"
