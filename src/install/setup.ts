@@ -124,8 +124,9 @@ export function checkApp(app: AppId, d: SetupDeps, want: ServerCommand): Check[]
   const checks: Check[] = [];
   const entry = currentEntry(app, d);
   const fix = "run `deal-harness init` again";
-  if (entry === null) checks.push({ ok: false, text: `${name}: no deal-harness server set up (${fix}).` });
-  else if (entry === "unknown") checks.push({ ok: true, warn: true, text: `${name}: has a deal-harness server, but its command couldn't be read.` });
+  // Found but never set up: the user may have left it out on purpose, so it's a note, not a failure.
+  if (entry === null) return [{ ok: true, warn: true, text: `${name}: found but not set up (to add it: \`deal-harness init --apps ${app}\`).` }];
+  if (entry === "unknown") checks.push({ ok: true, warn: true, text: `${name}: has a deal-harness server, but its command couldn't be read.` });
   else if (entry.command !== want.command || entry.args.join(" ") !== want.args.join(" ")) {
     checks.push({ ok: false, text: `${name}: the server points at ${[entry.command, ...entry.args].join(" ")}, not this install (${fix}).` });
   } else checks.push({ ok: true, text: `${name}: server set up.` });

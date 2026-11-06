@@ -23,6 +23,10 @@ A sales agent harness that runs inside Claude Code, Claude Desktop, Codex and Ge
 3. **Settings:** in `~/deal-harness-data/config.md`, set `rate card sheet` (a link is fine), `deals sheet` (your pipeline) and `max discount`.
 4. **Check:** `deal-harness doctor` (or `node ~/.deal-harness/app/node_modules/deal-harness/dist/cli/index.js doctor`). It checks Node, the install, the data folder, Google, that the server starts with no sending tools, and each app's entry and skills.
 
+## Releasing
+
+Bump `version` in package.json (and the two matching lines in package-lock.json), then `npm publish`. `prepublishOnly` runs lint, typecheck, tests and the build first, so a broken build can't ship. The package holds only `dist/`, `skills/`, `templates/`, the README and package.json.
+
 `npx deal-harness@latest update` installs a newer version, brings your data folder's format up to date (it only adds, never overwrites), and refreshes every app. `deal-harness uninstall` takes the harness out of every app and removes the Google token (`--keep-login` keeps it); your data folder stays.
 
 ## Tools

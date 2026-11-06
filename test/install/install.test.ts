@@ -183,7 +183,9 @@ describe("setting up apps in a temp home", () => {
     for (const a of ["claude-code", "codex", "gemini", "claude-desktop"] as const) {
       expect(checkApp(a, d, cmd).filter((c) => !c.ok), a).toEqual([]);
     }
-    // A stale entry is caught.
+    // An app that was never set up is a note; a stale entry is caught.
+    const fresh = setup().d;
+    expect(checkApp("codex", fresh, cmd)).toEqual([{ ok: true, warn: true, text: "Codex: found but not set up (to add it: `deal-harness init --apps codex`)." }]);
     expect(checkApp("codex", d, { ...cmd, command: "/other/node" }).some((c) => !c.ok)).toBe(true);
   });
 
